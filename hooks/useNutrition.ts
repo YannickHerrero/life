@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, createSyncableEntity, markForSync } from '@/lib/db';
 import { useSync } from './useSync';
@@ -103,7 +104,7 @@ export function useNutrition() {
   };
 
   // Search foods by name
-  const searchFoods = async (query: string): Promise<Food[]> => {
+  const searchFoods = useCallback(async (query: string): Promise<Food[]> => {
     if (!query.trim()) {
       return db.foods.filter((f) => !f.deletedAt).toArray();
     }
@@ -112,10 +113,10 @@ export function useNutrition() {
     return db.foods
       .filter((f) => !f.deletedAt && f.name.toLowerCase().includes(lowerQuery))
       .toArray();
-  };
+  }, []);
 
   // Get recent foods (last N unique foods used in meals)
-  const getRecentFoods = async (limit: number = 10): Promise<Food[]> => {
+  const getRecentFoods = useCallback(async (limit: number = 10): Promise<Food[]> => {
     const recentEntries = await db.mealEntries
       .filter((m) => !m.deletedAt)
       .reverse()
@@ -137,7 +138,7 @@ export function useNutrition() {
     );
 
     return recentFoods.filter((f): f is Food => f !== undefined && !f.deletedAt);
-  };
+  }, []);
 
   // Get food by ID
   const getFoodById = async (id: string): Promise<Food | undefined> => {
