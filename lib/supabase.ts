@@ -40,7 +40,9 @@ export function toSupabaseRecord<T extends Record<string, unknown>>(
 ): Record<string, unknown> {
   const snakeCase: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(record)) {
-    const snakeKey = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+    const snakeKey = key
+      .replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+      .replace(/([a-z])(\d)/g, '$1_$2');
     // Convert Date to ISO string
     if (value instanceof Date) {
       snakeCase[snakeKey] = value.toISOString();
@@ -54,7 +56,9 @@ export function toSupabaseRecord<T extends Record<string, unknown>>(
 export function fromSupabaseRecord<T>(record: Record<string, unknown>): T {
   const camelCase: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(record)) {
-    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    const camelKey = key
+      .replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
+      .replace(/_(\d)/g, '$1');
     // Convert date strings back to Date objects for known date fields
     if (
       (camelKey === 'createdAt' || camelKey === 'updatedAt' || camelKey === 'deletedAt') &&

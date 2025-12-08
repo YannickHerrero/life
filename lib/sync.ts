@@ -36,13 +36,16 @@ async function updateLastSyncTime(): Promise<void> {
 // Dexie table type for sync operations
 type DexieTable<T> = {
   where: (field: string) => {
-    equals: (val: string | number | boolean) => {
+    equals: (val: string | number) => {
       toArray: () => Promise<T[]>;
       modify: (changes: Partial<T>) => Promise<number>;
     };
     anyOf: (vals: string[]) => {
       delete: () => Promise<number>;
     };
+  };
+  filter: (fn: (item: T) => boolean) => {
+    toArray: () => Promise<T[]>;
   };
   bulkPut: (items: T[]) => Promise<unknown>;
 };
@@ -55,8 +58,8 @@ async function pushTable<T extends SyncableEntity>(
 ): Promise<void> {
   const supabase = getSupabaseClient();
 
-  // Get all pending items
-  const pendingItems = await localTable.where('pendingSync').equals(1).toArray();
+  // Get all pending items (use filter since booleans can't be indexed in IndexedDB)
+  const pendingItems = await localTable.filter(item => item.pendingSync === true).toArray();
 
   if (pendingItems.length === 0) return;
 
@@ -76,7 +79,7 @@ async function pushTable<T extends SyncableEntity>(
         .upsert(record, { onConflict: 'id' });
 
       if (error) {
-        console.error(`Failed to sync ${supabaseTable}:`, error);
+        console.error(`Failed to sync ${supabaseTable}:`, error.message, error.details, error.hint, error.code);
         continue;
       }
     }
