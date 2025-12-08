@@ -23,6 +23,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useNutrition } from '@/hooks/useNutrition';
+import { parseDecimal } from '@/lib/utils';
 import type { MealEntry, Food } from '@/types';
 
 const mealTypeLabels: Record<string, string> = {
@@ -64,7 +65,7 @@ export function NutritionHistory() {
   const handleSaveEdit = async () => {
     if (!editingEntry) return;
 
-    const quantity = parseFloat(editQuantity);
+    const quantity = parseDecimal(editQuantity);
     if (isNaN(quantity) || quantity <= 0) {
       toast.error('Please enter a valid quantity');
       return;
@@ -138,7 +139,8 @@ export function NutritionHistory() {
             <div className="space-y-2">
               <Label>Quantity (grams)</Label>
               <Input
-                type="number"
+                type="text"
+                inputMode="decimal"
                 value={editQuantity}
                 onChange={(e) => setEditQuantity(e.target.value)}
               />

@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useSport } from '@/hooks/useSport';
 import { SportType, TrainingType, today } from '@/types';
+import { parseDecimal } from '@/lib/utils';
 
 interface SportInputProps {
   onSuccess?: () => void;
@@ -70,7 +71,7 @@ export function SportInput({ onSuccess }: SportInputProps) {
     // Validate distance for running and bike
     let distance: number | null = null;
     if (selectedType === SportType.RUNNING || selectedType === SportType.BIKE) {
-      distance = parseFloat(distanceKm);
+      distance = parseDecimal(distanceKm);
       if (isNaN(distance) || distance <= 0) {
         toast.error('Please enter a valid distance');
         return;
@@ -167,13 +168,11 @@ export function SportInput({ onSuccess }: SportInputProps) {
           <Label htmlFor="distance">Distance (km)</Label>
           <Input
             id="distance"
-            type="number"
+            type="text"
             inputMode="decimal"
-            step="0.1"
             placeholder="e.g., 5.5"
             value={distanceKm}
             onChange={(e) => setDistanceKm(e.target.value)}
-            min={0.1}
             required
           />
         </div>

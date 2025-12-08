@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useWeight } from '@/hooks/useWeight';
 import { today } from '@/types';
+import { parseDecimal } from '@/lib/utils';
 
 interface WeightInputProps {
   onSuccess?: () => void;
@@ -39,7 +40,7 @@ export function WeightInput({ onSuccess }: WeightInputProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const weightKg = parseFloat(weight);
+    const weightKg = parseDecimal(weight);
     if (isNaN(weightKg) || weightKg <= 0 || weightKg > 500) {
       toast.error('Please enter a valid weight');
       return;
@@ -71,14 +72,11 @@ export function WeightInput({ onSuccess }: WeightInputProps) {
         <Label htmlFor="weight">Weight (kg)</Label>
         <Input
           id="weight"
-          type="number"
+          type="text"
           inputMode="decimal"
-          step="0.1"
           placeholder="e.g., 75.5"
           value={weight}
           onChange={(e) => setWeight(e.target.value)}
-          min={20}
-          max={500}
           required
           autoFocus
         />

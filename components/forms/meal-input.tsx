@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useNutrition } from '@/hooks/useNutrition';
 import { MealType, today } from '@/types';
+import { parseDecimal } from '@/lib/utils';
 import type { Food } from '@/types';
 
 interface MealInputProps {
@@ -75,10 +76,10 @@ export function MealInput({ onSuccess }: MealInputProps) {
   };
 
   const handleSaveNewFood = async () => {
-    const calories = parseFloat(newFoodCalories);
-    const protein = parseFloat(newFoodProtein);
-    const carbs = parseFloat(newFoodCarbs);
-    const fat = parseFloat(newFoodFat);
+    const calories = parseDecimal(newFoodCalories);
+    const protein = parseDecimal(newFoodProtein);
+    const carbs = parseDecimal(newFoodCarbs);
+    const fat = parseDecimal(newFoodFat);
 
     if (!newFoodName.trim()) {
       toast.error('Please enter a food name');
@@ -116,7 +117,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
 
     if (!selectedMealType || !selectedFood) return;
 
-    const grams = parseFloat(quantity);
+    const grams = parseDecimal(quantity);
     if (isNaN(grams) || grams <= 0) {
       toast.error('Please enter a valid quantity');
       return;
@@ -302,9 +303,8 @@ export function MealInput({ onSuccess }: MealInputProps) {
               <Label htmlFor="calories">Calories</Label>
               <Input
                 id="calories"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="any"
                 value={newFoodCalories}
                 onChange={(e) => setNewFoodCalories(e.target.value)}
                 placeholder="kcal"
@@ -314,9 +314,8 @@ export function MealInput({ onSuccess }: MealInputProps) {
               <Label htmlFor="protein">Protein (g)</Label>
               <Input
                 id="protein"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="any"
                 value={newFoodProtein}
                 onChange={(e) => setNewFoodProtein(e.target.value)}
                 placeholder="g"
@@ -326,9 +325,8 @@ export function MealInput({ onSuccess }: MealInputProps) {
               <Label htmlFor="carbs">Carbs (g)</Label>
               <Input
                 id="carbs"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="any"
                 value={newFoodCarbs}
                 onChange={(e) => setNewFoodCarbs(e.target.value)}
                 placeholder="g"
@@ -338,9 +336,8 @@ export function MealInput({ onSuccess }: MealInputProps) {
               <Label htmlFor="fat">Fat (g)</Label>
               <Input
                 id="fat"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="any"
                 value={newFoodFat}
                 onChange={(e) => setNewFoodFat(e.target.value)}
                 placeholder="g"
@@ -389,18 +386,17 @@ export function MealInput({ onSuccess }: MealInputProps) {
         <Label htmlFor="quantity">Quantity (grams)</Label>
         <Input
           id="quantity"
-          type="number"
-          inputMode="numeric"
+          type="text"
+          inputMode="decimal"
           placeholder="e.g., 150"
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-          min={1}
           required
           autoFocus
         />
         {quantity && selectedFood && (
           <p className="text-sm text-muted-foreground">
-            = {Math.round((selectedFood.caloriesPer100g * parseFloat(quantity)) / 100)} kcal
+            = {Math.round((selectedFood.caloriesPer100g * parseDecimal(quantity)) / 100)} kcal
           </p>
         )}
       </div>
