@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Languages, UtensilsCrossed, Dumbbell, Scale } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Languages, UtensilsCrossed, Dumbbell, Scale, Flame } from 'lucide-react';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Sheet,
   SheetContent,
@@ -13,6 +15,8 @@ import { JapaneseInput } from '@/components/forms/japanese-input';
 import { MealInput } from '@/components/forms/meal-input';
 import { SportInput } from '@/components/forms/sport-input';
 import { WeightInput } from '@/components/forms/weight-input';
+import { db } from '@/lib/db';
+import { today } from '@/types';
 
 type InputType = 'japanese' | 'meal' | 'sport' | 'weight' | null;
 
@@ -41,16 +45,116 @@ const inputConfig = {
 
 export default function DashboardPage() {
   const [activeInput, setActiveInput] = useState<InputType>(null);
+  const [todayCalories, setTodayCalories] = useState(0);
+  const todayStr = today();
+
+  // Get today's Japanese activities
+  const japaneseActivities = useLiveQuery(
+    () => db.japaneseActivities
+      .where('date')
+      .equals(todayStr)
+      .filter((a) => !a.deletedAt)
+      .toArray(),
+    [todayStr]
+  );
+
+  // Get today's sport activities
+  const sportActivities = useLiveQuery(
+    () => db.sportActivities
+      .where('date')
+      .equals(todayStr)
+      .filter((a) => !a.deletedAt)
+      .toArray(),
+    [todayStr]
+  );
+
+  // Get today's meal entries
+  const mealEntries = useLiveQuery(
+    () => db.mealEntries
+      .where('date')
+      .equals(todayStr)
+      .filter((m) => !m.deletedAt)
+      .toArray(),
+    [todayStr]
+  );
+
+  // Calculate calories when meal entries change
+  useEffect(() => {
+    const calculateCalories = async () => {
+      if (!mealEntries) {
+        setTodayCalories(0);
+        return;
+      }
+
+      let total = 0;
+      for (const entry of mealEntries) {
+        const food = await db.foods.get(entry.foodId);
+        if (food) {
+          total += (food.caloriesPer100g * entry.quantityGrams) / 100;
+        }
+      }
+      setTodayCalories(Math.round(total));
+    };
+
+    calculateCalories();
+  }, [mealEntries]);
+
+  // Calculate totals
+  const japaneseMinutes = useMemo(() => {
+    if (!japaneseActivities) return 0;
+    return japaneseActivities.reduce((sum, a) => sum + a.durationMinutes, 0);
+  }, [japaneseActivities]);
+
+  const sportMinutes = useMemo(() => {
+    if (!sportActivities) return 0;
+    return sportActivities.reduce((sum, a) => sum + a.durationMinutes, 0);
+  }, [sportActivities]);
+
+  const formatTime = (minutes: number) => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  };
 
   const handleClose = () => {
     setActiveInput(null);
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-6">Quick Actions</h2>
+    <div className="p-4 space-y-6">
+      {/* Overview Section */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Overview</h2>
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="py-3">
+            <CardContent className="px-3 text-center">
+              <Languages className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-lg font-semibold">{formatTime(japaneseMinutes)}</p>
+              <p className="text-xs text-muted-foreground">Japanese</p>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="px-3 text-center">
+              <Flame className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-lg font-semibold">{todayCalories}</p>
+              <p className="text-xs text-muted-foreground">kcal</p>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="px-3 text-center">
+              <Dumbbell className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-lg font-semibold">{formatTime(sportMinutes)}</p>
+              <p className="text-xs text-muted-foreground">Sport</p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-2 gap-4">
+      {/* Quick Actions Section */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-2 gap-4">
         {(Object.keys(inputConfig) as InputType[]).filter(Boolean).map((key) => {
           if (!key) return null;
           const config = inputConfig[key];
@@ -68,7 +172,8 @@ export default function DashboardPage() {
             </Button>
           );
         })}
-      </div>
+        </div>
+      </section>
 
       {/* Input Sheets */}
       {(Object.keys(inputConfig) as InputType[]).filter(Boolean).map((key) => {
