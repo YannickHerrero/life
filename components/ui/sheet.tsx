@@ -55,9 +55,9 @@ function SheetContent({
 }) {
   const keyboardHeight = useKeyboardHeight();
 
-  // For bottom sheets, adjust position when keyboard is open
+  // For bottom sheets, limit max height when keyboard is open so content stays visible
   const bottomStyle = side === "bottom" && keyboardHeight > 0
-    ? { bottom: `${keyboardHeight}px` }
+    ? { maxHeight: `calc(100dvh - ${keyboardHeight}px)` }
     : undefined;
 
   return (
@@ -74,7 +74,7 @@ function SheetContent({
           side === "top" &&
             "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b",
           side === "bottom" &&
-            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
+            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t overflow-auto",
           className
         )}
         style={bottomStyle}
