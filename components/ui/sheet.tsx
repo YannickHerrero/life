@@ -5,6 +5,7 @@ import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { useKeyboardHeight } from "@/hooks/useKeyboardHeight"
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -52,6 +53,13 @@ function SheetContent({
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   side?: "top" | "right" | "bottom" | "left"
 }) {
+  const keyboardHeight = useKeyboardHeight();
+
+  // For bottom sheets, add padding to push content above keyboard
+  const bottomStyle = side === "bottom" && keyboardHeight > 0
+    ? { paddingBottom: `${keyboardHeight}px` }
+    : undefined;
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -66,9 +74,10 @@ function SheetContent({
           side === "top" &&
             "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b",
           side === "bottom" &&
-            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t",
+            "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto max-h-dvh border-t overflow-auto pb-6",
           className
         )}
+        style={bottomStyle}
         {...props}
       >
         {children}
