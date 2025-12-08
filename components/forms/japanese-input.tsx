@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { BookOpen, Headphones, Monitor, GraduationCap } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -38,12 +38,20 @@ const activityTypes = [
 ];
 
 export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
-  const { addActivity } = useJapanese();
+  const { addActivity, activities } = useJapanese();
   const [step, setStep] = useState<'type' | 'details'>('type');
   const [selectedType, setSelectedType] = useState<JapaneseActivityType | null>(null);
   const [durationMinutes, setDurationMinutes] = useState('');
   const [newCards, setNewCards] = useState('20');
   const [loading, setLoading] = useState(false);
+
+  // Check if there's already a flashcard activity today
+  const hasFlashcardToday = useMemo(() => {
+    const todayDate = today();
+    return activities?.some(
+      (a) => a.type === JapaneseActivityType.FLASHCARDS && a.date === todayDate
+    ) ?? false;
+  }, [activities]);
 
   const handleTypeSelect = (type: JapaneseActivityType) => {
     setSelectedType(type);
@@ -51,7 +59,8 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
     // Reset duration but keep default for flashcards
     setDurationMinutes('');
     if (type === JapaneseActivityType.FLASHCARDS) {
-      setNewCards('20');
+      // First flashcard of the day defaults to 20, subsequent ones to 0
+      setNewCards(hasFlashcardToday ? '0' : '20');
     }
   };
 
@@ -74,7 +83,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
         durationMinutes: duration,
         newCards:
           selectedType === JapaneseActivityType.FLASHCARDS
-            ? parseInt(newCards, 10) || 20
+            ? parseInt(newCards, 10) || (hasFlashcardToday ? 0 : 20)
             : null,
         date: today(),
       });
