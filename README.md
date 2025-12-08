@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Life
+
+Personal habit tracking for Japanese learning, nutrition, sport, and weight.
+
+![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss)
+![Supabase](https://img.shields.io/badge/Supabase-green?logo=supabase)
+![PWA](https://img.shields.io/badge/PWA-enabled-purple)
+
+## About
+
+Life is a personal tracking web application for monitoring daily habits across four domains. The app prioritizes fast data input and insightful statistics visualization with an offline-first architecture.
+
+## Features
+
+### Japanese Learning
+Track flashcard sessions, reading, watching, and listening activities. View progress through heatmaps, streaks, and time statistics.
+
+### Nutrition
+Manage a personal food database with macro tracking (calories, protein, carbs, fat). Log meals by type and quantity with daily and weekly summaries.
+
+### Sport
+Log running, street workout, and biking sessions. Visualize activity through heatmaps and weekly distance graphs. Track duration, distance, and training types.
+
+### Weight
+Record daily weight measurements with trend visualization over time.
+
+### Offline-First
+All data is stored locally using IndexedDB for instant access. Syncs automatically with Supabase when online.
+
+### PWA
+Installable on mobile devices. Works offline after initial load.
+
+## Tech Stack
+
+- [Next.js 15](https://nextjs.org/) (App Router)
+- [React 19](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/) with [Catppuccin](https://catppuccin.com/) theme
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Dexie.js](https://dexie.org/) (IndexedDB wrapper)
+- [Supabase](https://supabase.com/) (Authentication + Cloud Sync)
+- [Recharts](https://recharts.org/) (Data visualization)
+- [Serwist](https://serwist.pages.dev/) (PWA / Service Worker)
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- [Bun](https://bun.sh/) (or Node.js)
+- [Supabase](https://supabase.com/) account
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/YannickHerrero/life.git
+   cd life
+   ```
+
+2. Install dependencies:
+   ```bash
+   bun install
+   ```
+
+3. Create `.env.local` with your Supabase credentials:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. Run the development server:
+   ```bash
+   bun dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000)
+
+### Build
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+├── app/
+│   ├── (auth)/          # Login and signup pages
+│   ├── (main)/          # Dashboard, stats, history, settings
+│   └── layout.tsx
+├── components/
+│   ├── ui/              # shadcn/ui components
+│   ├── charts/          # Heatmaps, line charts, bar charts
+│   ├── forms/           # Input forms for each domain
+│   └── history/         # History view components
+├── hooks/               # Custom hooks for each domain
+├── lib/                 # Database, sync, utilities
+└── types/               # TypeScript type definitions
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## License
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
