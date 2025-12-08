@@ -304,6 +304,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
                 id="calories"
                 type="number"
                 inputMode="decimal"
+                step="any"
                 value={newFoodCalories}
                 onChange={(e) => setNewFoodCalories(e.target.value)}
                 placeholder="kcal"
@@ -315,6 +316,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
                 id="protein"
                 type="number"
                 inputMode="decimal"
+                step="any"
                 value={newFoodProtein}
                 onChange={(e) => setNewFoodProtein(e.target.value)}
                 placeholder="g"
@@ -326,6 +328,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
                 id="carbs"
                 type="number"
                 inputMode="decimal"
+                step="any"
                 value={newFoodCarbs}
                 onChange={(e) => setNewFoodCarbs(e.target.value)}
                 placeholder="g"
@@ -337,6 +340,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
                 id="fat"
                 type="number"
                 inputMode="decimal"
+                step="any"
                 value={newFoodFat}
                 onChange={(e) => setNewFoodFat(e.target.value)}
                 placeholder="g"
