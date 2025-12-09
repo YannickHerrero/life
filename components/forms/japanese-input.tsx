@@ -107,10 +107,13 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
     }
 
     if (type === JapaneseActivityType.READING) {
-      setStep('book-select');
-    } else {
-      setStep('details');
+      // Fetch last book and go directly to details
+      const lastBook = await getLastReadBook();
+      setLastReadBook(lastBook);
+      setSelectedBook(lastBook); // Can be null
     }
+
+    setStep('details');
   };
 
   const handleBookSelect = (book: Book | null) => {
@@ -193,11 +196,13 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
   };
 
   const handleBack = () => {
-    if (step === 'details' && selectedType === JapaneseActivityType.READING) {
-      setStep('book-select');
+    if (step === 'book-select') {
+      // From book selection, go back to details
+      setStep('details');
     } else if (step === 'new-book') {
       setStep('book-select');
     } else {
+      // From details, go back to type selection
       setStep('type');
       setSelectedType(null);
       setSelectedBook(null);
@@ -380,12 +385,18 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
         </span>
       </button>
 
-      {/* Show selected book if any */}
-      {selectedType === JapaneseActivityType.READING && selectedBook && (
-        <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-sm text-muted-foreground">Reading</p>
-          <p className="font-medium">{selectedBook.title}</p>
-        </div>
+      {/* Book selector (clickable to change) */}
+      {selectedType === JapaneseActivityType.READING && (
+        <button
+          type="button"
+          onClick={() => setStep('book-select')}
+          className="w-full p-3 rounded-lg bg-muted/50 text-left hover:bg-muted transition-colors"
+        >
+          <p className="text-sm text-muted-foreground">Book</p>
+          <p className="font-medium">
+            {selectedBook ? selectedBook.title : 'No book selected'}
+          </p>
+        </button>
       )}
 
       {/* Duration input */}
