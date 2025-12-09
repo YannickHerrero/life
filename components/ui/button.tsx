@@ -41,17 +41,28 @@ function Button({
   variant,
   size,
   asChild = false,
+  pressMode = 'click',
+  onClick,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    pressMode?: 'press' | 'click'
   }) {
   const Comp = asChild ? Slot : "button"
+
+  const handlePointerDown = pressMode === 'press' && onClick
+    ? (e: React.PointerEvent<HTMLButtonElement>) => {
+        onClick(e as unknown as React.MouseEvent<HTMLButtonElement>)
+      }
+    : undefined
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      onClick={pressMode === 'click' ? onClick : undefined}
+      onPointerDown={handlePointerDown}
       {...props}
     />
   )

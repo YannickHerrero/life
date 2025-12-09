@@ -169,6 +169,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
               key={type}
               variant="outline"
               className="h-24 flex flex-col gap-2"
+              pressMode="press"
               onClick={() => handleMealTypeSelect(type)}
             >
               <Icon className="h-6 w-6" />
@@ -186,7 +187,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
       <div className="space-y-4">
         <button
           type="button"
-          onClick={handleBack}
+          onPointerDown={handleBack}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <span>&larr;</span>
@@ -214,7 +215,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
                 {recentFoods.map((food) => (
                   <button
                     key={food.id}
-                    onClick={() => handleFoodSelect(food)}
+                    onPointerDown={() => handleFoodSelect(food)}
                     className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
                   >
                     <p className="font-medium">{food.name}</p>
@@ -237,7 +238,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
               {searchResults.map((food) => (
                 <button
                   key={food.id}
-                  onClick={() => handleFoodSelect(food)}
+                  onPointerDown={() => handleFoodSelect(food)}
                   className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
                 >
                   <p className="font-medium">{food.name}</p>
@@ -260,6 +261,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
         <Button
           variant="outline"
           className="w-full"
+          pressMode="press"
           onClick={handleNewFood}
         >
           <Plus className="h-4 w-4 mr-2" />
@@ -275,7 +277,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
       <div className="space-y-4">
         <button
           type="button"
-          onClick={handleBack}
+          onPointerDown={handleBack}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
           <span>&larr;</span>
@@ -362,7 +364,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <button
         type="button"
-        onClick={handleBack}
+        onPointerDown={handleBack}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <span>&larr;</span>

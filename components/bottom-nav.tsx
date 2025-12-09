@@ -24,7 +24,7 @@ export function BottomNav() {
           return (
             <button
               key={item.route}
-              onClick={() => navigate(item.route)}
+              onPointerDown={() => navigate(item.route)}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 px-3 py-2 text-xs transition-colors',
                 isActive

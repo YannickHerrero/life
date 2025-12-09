@@ -70,6 +70,7 @@ export function Settings() {
             <Button
               variant="outline"
               size="sm"
+              pressMode="press"
               onClick={() => setTheme('light')}
               className={cn(
                 'flex-1',
@@ -82,6 +83,7 @@ export function Settings() {
             <Button
               variant="outline"
               size="sm"
+              pressMode="press"
               onClick={() => setTheme('dark')}
               className={cn(
                 'flex-1',
@@ -94,6 +96,7 @@ export function Settings() {
             <Button
               variant="outline"
               size="sm"
+              pressMode="press"
               onClick={() => setTheme('system')}
               className={cn(
                 'flex-1',
@@ -113,6 +116,7 @@ export function Settings() {
           <Button
             variant="outline"
             className="w-full justify-start"
+            pressMode="press"
             onClick={() => navigate('history')}
           >
             <History className="h-4 w-4 mr-2" />
