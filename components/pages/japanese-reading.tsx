@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useBooks } from '@/hooks/useBooks';
+import { useState, useMemo } from 'react';
 import { useNavigation } from '@/lib/navigation-context';
+import { useAppStore } from '@/lib/store';
+import { useBooks } from '@/hooks/useBooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Check, MoreVertical, Trash2, RotateCcw, ChevronLeft } from 'lucide-react';
@@ -33,9 +34,26 @@ function formatMinutes(minutes: number): string {
 }
 
 export function JapaneseReading() {
-  const { inProgressBooks, completedBooks, markComplete, markIncomplete, deleteBook } = useBooks();
   const { goBack } = useNavigation();
+  const books = useAppStore((s) => s.books);
+  const { markComplete, markIncomplete, deleteBook } = useBooks();
   const [deleteTarget, setDeleteTarget] = useState<Book | null>(null);
+
+  // Filter books by status
+  const inProgressBooks = useMemo(
+    () => books.filter((b) => !b.completed).sort((a, b) => a.title.localeCompare(b.title)),
+    [books]
+  );
+
+  const completedBooks = useMemo(
+    () => books
+      .filter((b) => b.completed)
+      .sort((a, b) => {
+        if (!a.completedAt || !b.completedAt) return 0;
+        return new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime();
+      }),
+    [books]
+  );
 
   const handleMarkComplete = async (bookId: string) => {
     await markComplete(bookId);
@@ -110,7 +128,7 @@ export function JapaneseReading() {
           <CardTitle className="text-base">In Progress</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {inProgressBooks && inProgressBooks.length > 0 ? (
+          {inProgressBooks.length > 0 ? (
             inProgressBooks.map((book) => (
               <BookCard key={book.id} book={book} showCompleteAction={true} />
             ))
@@ -128,7 +146,7 @@ export function JapaneseReading() {
           <CardTitle className="text-base">Completed</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {completedBooks && completedBooks.length > 0 ? (
+          {completedBooks.length > 0 ? (
             completedBooks.map((book) => (
               <BookCard key={book.id} book={book} showCompleteAction={false} />
             ))

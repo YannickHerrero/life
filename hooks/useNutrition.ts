@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, createSyncableEntity, markForSync } from '@/lib/db';
 import { useSync } from './useSync';
+import { useAppStore } from '@/lib/store';
 import type {
   Food,
   FoodInput,
@@ -41,6 +42,9 @@ export function useNutrition() {
       ...input,
     };
 
+    // Optimistic update
+    useAppStore.getState().addFood(food);
+
     await db.foods.add(food);
     triggerSync();
     return food;
@@ -55,6 +59,8 @@ export function useNutrition() {
     if (!existing) return;
 
     const updated = markForSync({ ...existing, ...updates });
+    // Optimistic update
+    useAppStore.getState().updateFood(updated);
     await db.foods.put(updated);
     triggerSync();
   };
@@ -76,6 +82,9 @@ export function useNutrition() {
       ...input,
     };
 
+    // Optimistic update
+    useAppStore.getState().addMealEntry(entry);
+
     await db.mealEntries.add(entry);
     triggerSync();
   };
@@ -89,6 +98,8 @@ export function useNutrition() {
     if (!existing) return;
 
     const updated = markForSync({ ...existing, ...updates });
+    // Optimistic update
+    useAppStore.getState().updateMealEntry(updated);
     await db.mealEntries.put(updated);
     triggerSync();
   };
@@ -97,6 +108,9 @@ export function useNutrition() {
   const deleteMealEntry = async (id: string): Promise<void> => {
     const existing = await db.mealEntries.get(id);
     if (!existing) return;
+
+    // Optimistic update (remove from store immediately)
+    useAppStore.getState().deleteMealEntry(id);
 
     const deleted = markForSync({ ...existing, deletedAt: new Date() });
     await db.mealEntries.put(deleted);

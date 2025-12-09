@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useAppStore } from '@/lib/store';
 import { useJapanese } from '@/hooks/useJapanese';
 import type { JapaneseActivity } from '@/types';
 
@@ -33,11 +34,18 @@ const activityTypeLabels: Record<string, string> = {
 };
 
 export function JapaneseHistory() {
-  const { activities, updateActivity, deleteActivity } = useJapanese();
+  const japaneseActivities = useAppStore((s) => s.japaneseActivities);
+  const { updateActivity, deleteActivity } = useJapanese();
   const [editingEntry, setEditingEntry] = useState<JapaneseActivity | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editDuration, setEditDuration] = useState('');
   const [editNewCards, setEditNewCards] = useState('');
+
+  // Sort activities by date descending
+  const sortedActivities = useMemo(
+    () => [...japaneseActivities].sort((a, b) => b.date.localeCompare(a.date)),
+    [japaneseActivities]
+  );
 
   const handleEdit = (entry: JapaneseActivity) => {
     setEditingEntry(entry);
@@ -71,7 +79,7 @@ export function JapaneseHistory() {
     setDeletingId(null);
   };
 
-  if (!activities || activities.length === 0) {
+  if (sortedActivities.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No Japanese activities logged yet
@@ -82,7 +90,7 @@ export function JapaneseHistory() {
   return (
     <>
       <div className="space-y-2">
-        {activities.map((entry) => (
+        {sortedActivities.map((entry) => (
           <div
             key={entry.id}
             className="flex items-center justify-between p-3 rounded-lg border bg-card"

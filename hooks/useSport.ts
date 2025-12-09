@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, createSyncableEntity, markForSync } from '@/lib/db';
 import { useSync } from './useSync';
+import { useAppStore } from '@/lib/store';
 import type {
   SportActivity,
   SportActivityInput,
@@ -31,6 +32,9 @@ export function useSport() {
       ...input,
     };
 
+    // Optimistic update
+    useAppStore.getState().addSportActivity(activity);
+
     await db.sportActivities.add(activity);
     triggerSync();
   };
@@ -44,6 +48,8 @@ export function useSport() {
     if (!existing) return;
 
     const updated = markForSync({ ...existing, ...updates });
+    // Optimistic update
+    useAppStore.getState().updateSportActivity(updated);
     await db.sportActivities.put(updated);
     triggerSync();
   };
@@ -52,6 +58,9 @@ export function useSport() {
   const deleteActivity = async (id: string): Promise<void> => {
     const existing = await db.sportActivities.get(id);
     if (!existing) return;
+
+    // Optimistic update (remove from store immediately)
+    useAppStore.getState().deleteSportActivity(id);
 
     const deleted = markForSync({ ...existing, deletedAt: new Date() });
     await db.sportActivities.put(deleted);
