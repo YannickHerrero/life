@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface SportHeatmapProps {
@@ -25,7 +25,9 @@ export function SportHeatmap({
   year = new Date().getFullYear(),
   onDayClick,
 }: SportHeatmapProps) {
-  const { weeks, monthLabels } = useMemo(() => {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const { weeks, monthLabels, currentWeekIndex } = useMemo(() => {
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
 
@@ -76,7 +78,22 @@ export function SportHeatmap({
       }
     });
 
-    return { weeks, monthLabels };
+    // Find the week index containing today
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    let currentWeekIndex = -1;
+
+    if (today.getFullYear() === year) {
+      weeks.forEach((week, weekIndex) => {
+        week.forEach(({ date }) => {
+          if (date.toISOString().split('T')[0] === todayStr) {
+            currentWeekIndex = weekIndex;
+          }
+        });
+      });
+    }
+
+    return { weeks, monthLabels, currentWeekIndex };
   }, [data, year]);
 
   const getColorClass = (activities: { running: boolean; workout: boolean }): string => {
@@ -94,8 +111,26 @@ export function SportHeatmap({
     return parts.join(': ');
   };
 
+  // Scroll to current week on mount
+  useEffect(() => {
+    if (currentWeekIndex === -1 || !scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const cellWidth = 12; // 10px cell + 2px gap
+    const dayLabelsWidth = 32; // approximate width of day labels (pr-2 + text)
+
+    // Calculate scroll position to center the current week
+    const targetScroll = dayLabelsWidth + currentWeekIndex * cellWidth - container.clientWidth / 2;
+
+    // Clamp to valid scroll range (avoid overscrolling)
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    const scrollPosition = Math.max(0, Math.min(targetScroll, maxScroll));
+
+    container.scrollLeft = scrollPosition;
+  }, [currentWeekIndex]);
+
   return (
-    <div className="overflow-x-auto pb-2">
+    <div ref={scrollContainerRef} className="overflow-x-auto pb-2">
       <div className="inline-block min-w-max">
         {/* Month labels */}
         <div className="flex ml-8 mb-1">
