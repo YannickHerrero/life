@@ -25,21 +25,25 @@ const inputConfig = {
     title: 'Log Japanese',
     icon: Languages,
     component: JapaneseInput,
+    sheetClassName: 'h-[85dvh]',
   },
   meal: {
     title: 'Log Meal',
     icon: UtensilsCrossed,
     component: MealInput,
+    sheetClassName: 'h-[85dvh]',
   },
   sport: {
     title: 'Log Sport',
     icon: Dumbbell,
     component: SportInput,
+    sheetClassName: 'h-[85dvh]',
   },
   weight: {
     title: 'Log Weight',
     icon: Scale,
     component: WeightInput,
+    sheetClassName: '',
   },
 };
 
@@ -187,11 +191,11 @@ export default function DashboardPage() {
             open={activeInput === key}
             onOpenChange={(open) => !open && handleClose()}
           >
-            <SheetContent side="bottom" className="h-[85dvh] rounded-t-xl px-6 pb-6">
+            <SheetContent side="bottom" className={`${config.sheetClassName} rounded-t-xl px-6 pb-6`}>
               <SheetHeader>
                 <SheetTitle>{config.title}</SheetTitle>
               </SheetHeader>
-              <div className="mt-4 overflow-y-auto h-[calc(100%-4rem)]">
+              <div className={`mt-4 ${config.sheetClassName ? 'overflow-y-auto h-[calc(100%-4rem)]' : ''}`}>
                 <Component onSuccess={handleClose} />
               </div>
             </SheetContent>
