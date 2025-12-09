@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Languages, UtensilsCrossed, Dumbbell, Scale, Flame } from 'lucide-react';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +15,7 @@ import { JapaneseInput } from '@/components/forms/japanese-input';
 import { MealInput } from '@/components/forms/meal-input';
 import { SportInput } from '@/components/forms/sport-input';
 import { WeightInput } from '@/components/forms/weight-input';
-import { db } from '@/lib/db';
+import { useAppStore } from '@/lib/store';
 import { today } from '@/types';
 
 type InputType = 'japanese' | 'meal' | 'sport' | 'weight' | null;
@@ -50,79 +49,59 @@ const inputConfig = {
 
 export function Dashboard() {
   const [activeInput, setActiveInput] = useState<InputType>(null);
-  const [todayCalories, setTodayCalories] = useState(0);
   const todayStr = today();
 
-  // Get today's Japanese activities
-  const japaneseActivities = useLiveQuery(
-    () => db.japaneseActivities
-      .where('date')
-      .equals(todayStr)
-      .filter((a) => !a.deletedAt)
-      .toArray(),
-    [todayStr]
+  // Get data from store
+  const japaneseActivities = useAppStore((s) => s.japaneseActivities);
+  const sportActivities = useAppStore((s) => s.sportActivities);
+  const mealEntries = useAppStore((s) => s.mealEntries);
+  const foods = useAppStore((s) => s.foods);
+  const weightEntries = useAppStore((s) => s.weightEntries);
+
+  // Filter today's data
+  const todayJapanese = useMemo(
+    () => japaneseActivities.filter((a) => a.date === todayStr),
+    [japaneseActivities, todayStr]
   );
 
-  // Get today's sport activities
-  const sportActivities = useLiveQuery(
-    () => db.sportActivities
-      .where('date')
-      .equals(todayStr)
-      .filter((a) => !a.deletedAt)
-      .toArray(),
-    [todayStr]
+  const todaySport = useMemo(
+    () => sportActivities.filter((a) => a.date === todayStr),
+    [sportActivities, todayStr]
   );
 
-  // Get today's meal entries
-  const mealEntries = useLiveQuery(
-    () => db.mealEntries
-      .where('date')
-      .equals(todayStr)
-      .filter((m) => !m.deletedAt)
-      .toArray(),
-    [todayStr]
+  const todayMeals = useMemo(
+    () => mealEntries.filter((m) => m.date === todayStr),
+    [mealEntries, todayStr]
   );
 
-  // Get today's weight entry
-  const todayWeight = useLiveQuery(
-    () => db.weightEntries
-      .where('date')
-      .equals(todayStr)
-      .filter((w) => !w.deletedAt)
-      .first(),
-    [todayStr]
+  const todayWeight = useMemo(
+    () => weightEntries.find((w) => w.date === todayStr),
+    [weightEntries, todayStr]
   );
 
-  // Calculate calories when meal entries change
-  useEffect(() => {
-    const calculateCalories = async () => {
-      if (!mealEntries?.length) {
-        setTodayCalories(0);
-        return;
-      }
+  // Calculate calories from today's meals
+  const todayCalories = useMemo(() => {
+    if (!todayMeals.length) return 0;
 
-      const foodIds = mealEntries.map((e) => e.foodId);
-      const foods = await db.foods.bulkGet(foodIds);
-      const total = mealEntries.reduce((sum, entry, i) => {
-        const food = foods[i];
+    const foodMap = new Map(foods.map((f) => [f.id, f]));
+    return Math.round(
+      todayMeals.reduce((sum, entry) => {
+        const food = foodMap.get(entry.foodId);
         return food ? sum + (food.caloriesPer100g * entry.quantityGrams) / 100 : sum;
-      }, 0);
-      setTodayCalories(Math.round(total));
-    };
-
-    calculateCalories();
-  }, [mealEntries]);
+      }, 0)
+    );
+  }, [todayMeals, foods]);
 
   // Calculate totals
-  const japaneseMinutes = useMemo(() => {
-    if (!japaneseActivities) return 0;
-    return japaneseActivities.reduce((sum, a) => sum + a.durationMinutes, 0);
-  }, [japaneseActivities]);
+  const japaneseMinutes = useMemo(
+    () => todayJapanese.reduce((sum, a) => sum + a.durationMinutes, 0),
+    [todayJapanese]
+  );
 
-  const sportMinutes = useMemo(() => {
-    if (!sportActivities) return 0;
-    return sportActivities.reduce((sum, a) => sum + a.durationMinutes, 0);
-  }, [sportActivities]);
+  const sportMinutes = useMemo(
+    () => todaySport.reduce((sum, a) => sum + a.durationMinutes, 0),
+    [todaySport]
+  );
 
   const formatTime = (minutes: number) => {
     if (minutes < 60) return `${minutes}m`;

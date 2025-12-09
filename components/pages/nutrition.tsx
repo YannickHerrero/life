@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,41 +13,67 @@ import {
 } from '@/components/ui/popover';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart } from '@/components/charts/line-chart';
-import { useNutritionStats } from '@/hooks/useNutrition';
-import { useWeight } from '@/hooks/useWeight';
-import type { MacroTotals } from '@/types';
+import { useAppStore } from '@/lib/store';
 
 type Period = '1m' | '3m' | '1y';
 
 export function Nutrition() {
-  const { getDailyMacros, getMealsForDate, getWeeklyAverages, mealEntries } = useNutritionStats();
-  const { getWeightHistory } = useWeight();
+  const mealEntries = useAppStore((s) => s.mealEntries);
+  const foods = useAppStore((s) => s.foods);
+  const weightEntries = useAppStore((s) => s.weightEntries);
+  const weeklyAverages = useAppStore((s) => s.weeklyAverages);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [dailyMacros, setDailyMacros] = useState<MacroTotals>({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-  const [weeklyAverages, setWeeklyAverages] = useState<MacroTotals>({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-  const [meals, setMeals] = useState<{ entry: { mealType: string; quantityGrams: number }; food: { name: string; caloriesPer100g: number } | undefined }[]>([]);
-  const [weightData, setWeightData] = useState<{ date: string; weight: number }[]>([]);
   const [period, setPeriod] = useState<Period>('3m');
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
+  const foodMap = useMemo(() => new Map(foods.map((f) => [f.id, f])), [foods]);
 
-  // Load daily data when date changes
-  useEffect(() => {
-    getDailyMacros(dateStr).then(setDailyMacros);
-    getMealsForDate(dateStr).then(setMeals);
-  }, [dateStr, getDailyMacros, getMealsForDate]);
+  // Get meals for selected date
+  const meals = useMemo(() => {
+    const entries = mealEntries.filter((m) => m.date === dateStr);
+    return entries.map((entry) => ({
+      entry,
+      food: foodMap.get(entry.foodId),
+    })).filter((m) => m.food !== undefined);
+  }, [mealEntries, dateStr, foodMap]);
 
-  // Load weekly averages
-  useEffect(() => {
-    getWeeklyAverages().then(setWeeklyAverages);
-  }, [getWeeklyAverages, mealEntries]);
+  // Calculate daily macros
+  const dailyMacros = useMemo(() => {
+    let calories = 0;
+    let protein = 0;
+    let carbs = 0;
+    let fat = 0;
 
-  // Load weight history based on period
-  useEffect(() => {
+    for (const { entry, food } of meals) {
+      if (!food) continue;
+      const multiplier = entry.quantityGrams / 100;
+      calories += food.caloriesPer100g * multiplier;
+      protein += food.proteinPer100g * multiplier;
+      carbs += food.carbsPer100g * multiplier;
+      fat += food.fatPer100g * multiplier;
+    }
+
+    return {
+      calories: Math.round(calories),
+      protein: Math.round(protein * 10) / 10,
+      carbs: Math.round(carbs * 10) / 10,
+      fat: Math.round(fat * 10) / 10,
+    };
+  }, [meals]);
+
+  // Get weight history based on period
+  const weightData = useMemo(() => {
     const monthsBack = period === '1m' ? 1 : period === '3m' ? 3 : 12;
-    getWeightHistory(monthsBack).then(setWeightData);
-  }, [period, getWeightHistory]);
+    const cutoffDate = new Date();
+    cutoffDate.setMonth(cutoffDate.getMonth() - monthsBack);
+    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+
+    return weightEntries
+      .filter((e) => e.date > cutoffStr)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((e) => ({ date: e.date, weight: e.weightKg }));
+  }, [weightEntries, period]);
 
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(selectedDate);

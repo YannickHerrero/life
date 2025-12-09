@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, createSyncableEntity, markForSync } from '@/lib/db';
 import { useSync } from './useSync';
+import { useAppStore } from '@/lib/store';
 import type { WeightEntry } from '@/types';
 
 export function useWeight() {
@@ -31,6 +32,8 @@ export function useWeight() {
     if (existing) {
       // Update existing entry
       const updated = markForSync({ ...existing, weightKg });
+      // Optimistic update
+      useAppStore.getState().updateWeightEntry(updated);
       await db.weightEntries.put(updated);
     } else {
       // Create new entry
@@ -39,6 +42,8 @@ export function useWeight() {
         weightKg,
         date,
       };
+      // Optimistic update
+      useAppStore.getState().addWeightEntry(entry);
       await db.weightEntries.add(entry);
     }
 
@@ -49,6 +54,9 @@ export function useWeight() {
   const deleteEntry = async (id: string): Promise<void> => {
     const existing = await db.weightEntries.get(id);
     if (!existing) return;
+
+    // Optimistic update (remove from store immediately)
+    useAppStore.getState().deleteWeightEntry(id);
 
     const deleted = markForSync({ ...existing, deletedAt: new Date() });
     await db.weightEntries.put(deleted);

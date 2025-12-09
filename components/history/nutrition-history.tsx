@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useAppStore } from '@/lib/store';
 import { useNutrition } from '@/hooks/useNutrition';
 import { parseDecimal } from '@/lib/utils';
-import type { MealEntry, Food } from '@/types';
+import type { MealEntry } from '@/types';
 
 const mealTypeLabels: Record<string, string> = {
   breakfast: 'Breakfast',
@@ -34,28 +35,25 @@ const mealTypeLabels: Record<string, string> = {
 };
 
 export function NutritionHistory() {
-  const { mealEntries, updateMealEntry, deleteMealEntry, getFoodById } = useNutrition();
-  const [entriesWithFood, setEntriesWithFood] = useState<{ entry: MealEntry; food: Food | undefined }[]>([]);
+  const mealEntries = useAppStore((s) => s.mealEntries);
+  const foods = useAppStore((s) => s.foods);
+  const { updateMealEntry, deleteMealEntry } = useNutrition();
   const [editingEntry, setEditingEntry] = useState<MealEntry | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState('');
 
-  // Load food details for entries
-  useEffect(() => {
-    if (!mealEntries) return;
+  // Create food map and entries with food info
+  const foodMap = useMemo(() => new Map(foods.map((f) => [f.id, f])), [foods]);
 
-    const loadFoods = async () => {
-      const withFood = await Promise.all(
-        mealEntries.map(async (entry) => ({
-          entry,
-          food: await getFoodById(entry.foodId),
-        }))
-      );
-      setEntriesWithFood(withFood);
-    };
-
-    loadFoods();
-  }, [mealEntries, getFoodById]);
+  const entriesWithFood = useMemo(
+    () => [...mealEntries]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .map((entry) => ({
+        entry,
+        food: foodMap.get(entry.foodId),
+      })),
+    [mealEntries, foodMap]
+  );
 
   const handleEdit = (entry: MealEntry) => {
     setEditingEntry(entry);

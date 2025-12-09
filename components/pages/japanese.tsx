@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useJapaneseStats } from '@/hooks/useJapanese';
 import { useNavigation } from '@/lib/navigation-context';
+import { useAppStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActivityHeatmap } from '@/components/charts/activity-heatmap';
 import { Flame, BookOpen, ChevronRight } from 'lucide-react';
@@ -16,17 +16,13 @@ function formatMinutes(minutes: number): string {
 }
 
 export function Japanese() {
-  const { streaks, flashcardStats, timeStats, dailyTimeMap } = useJapaneseStats();
   const { navigate } = useNavigation();
+  const japaneseStats = useAppStore((s) => s.japaneseStats);
 
   // Convert Map to the format expected by heatmap
   const heatmapData = useMemo(() => {
-    const data = new Map<string, number>();
-    dailyTimeMap.forEach((value, key) => {
-      data.set(key, value);
-    });
-    return data;
-  }, [dailyTimeMap]);
+    return japaneseStats.dailyTimeMap;
+  }, [japaneseStats.dailyTimeMap]);
 
   return (
     <div className="p-4 space-y-6">
@@ -43,7 +39,7 @@ export function Japanese() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Flame className="h-5 w-5 text-orange-500" />
-              <span className="text-2xl font-bold">{streaks.current}</span>
+              <span className="text-2xl font-bold">{japaneseStats.streaks.current}</span>
               <span className="text-muted-foreground">days</span>
             </div>
           </CardContent>
@@ -57,7 +53,7 @@ export function Japanese() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">{streaks.longest}</span>
+              <span className="text-2xl font-bold">{japaneseStats.streaks.longest}</span>
               <span className="text-muted-foreground">days</span>
             </div>
           </CardContent>
@@ -72,19 +68,19 @@ export function Japanese() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-2xl font-bold">{flashcardStats.total}</p>
+              <p className="text-2xl font-bold">{japaneseStats.flashcardStats.total}</p>
               <p className="text-sm text-muted-foreground">Total</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{flashcardStats.thisYear}</p>
+              <p className="text-2xl font-bold">{japaneseStats.flashcardStats.thisYear}</p>
               <p className="text-sm text-muted-foreground">This Year</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{flashcardStats.thisMonth}</p>
+              <p className="text-2xl font-bold">{japaneseStats.flashcardStats.thisMonth}</p>
               <p className="text-sm text-muted-foreground">This Month</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{flashcardStats.thisWeek}</p>
+              <p className="text-2xl font-bold">{japaneseStats.flashcardStats.thisWeek}</p>
               <p className="text-sm text-muted-foreground">This Week</p>
             </div>
           </div>
@@ -99,19 +95,19 @@ export function Japanese() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-2xl font-bold">{formatMinutes(timeStats.total)}</p>
+              <p className="text-2xl font-bold">{formatMinutes(japaneseStats.timeStats.total)}</p>
               <p className="text-sm text-muted-foreground">Total</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{formatMinutes(timeStats.thisYear)}</p>
+              <p className="text-2xl font-bold">{formatMinutes(japaneseStats.timeStats.thisYear)}</p>
               <p className="text-sm text-muted-foreground">This Year</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{formatMinutes(timeStats.thisMonth)}</p>
+              <p className="text-2xl font-bold">{formatMinutes(japaneseStats.timeStats.thisMonth)}</p>
               <p className="text-sm text-muted-foreground">This Month</p>
             </div>
             <div>
-              <p className="text-2xl font-bold">{formatMinutes(timeStats.thisWeek)}</p>
+              <p className="text-2xl font-bold">{formatMinutes(japaneseStats.timeStats.thisWeek)}</p>
               <p className="text-sm text-muted-foreground">This Week</p>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, createSyncableEntity, markForSync } from '@/lib/db';
 import { useSync } from './useSync';
+import { useAppStore } from '@/lib/store';
 import type {
   JapaneseActivity,
   JapaneseActivityInput,
@@ -32,6 +33,9 @@ export function useJapanese() {
       ...input,
     };
 
+    // Optimistic update
+    useAppStore.getState().addJapaneseActivity(activity);
+
     await db.japaneseActivities.add(activity);
 
     // If this is a reading activity with a book, update the book's total time and start date
@@ -44,6 +48,8 @@ export function useJapanese() {
           // Set startedAt on first reading session
           startedAt: book.startedAt ?? new Date(),
         });
+        // Optimistic update for book
+        useAppStore.getState().updateBook(updatedBook);
         await db.books.put(updatedBook);
       }
     }
@@ -60,6 +66,8 @@ export function useJapanese() {
     if (!existing) return;
 
     const updated = markForSync({ ...existing, ...updates });
+    // Optimistic update
+    useAppStore.getState().updateJapaneseActivity(updated);
     await db.japaneseActivities.put(updated);
     triggerSync();
   };
@@ -68,6 +76,9 @@ export function useJapanese() {
   const deleteActivity = async (id: string): Promise<void> => {
     const existing = await db.japaneseActivities.get(id);
     if (!existing) return;
+
+    // Optimistic update (remove from store immediately)
+    useAppStore.getState().deleteJapaneseActivity(id);
 
     const deleted = markForSync({ ...existing, deletedAt: new Date() });
     await db.japaneseActivities.put(deleted);

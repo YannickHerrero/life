@@ -2,8 +2,9 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useAppStore } from '@/lib/store';
 import { NavigationProvider, useNavigation } from '@/lib/navigation-context';
 import { BottomNav } from '@/components/bottom-nav';
 import { Button } from '@/components/ui/button';
@@ -61,16 +62,26 @@ function Header() {
 }
 
 export default function MainLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { isReady, isLoading: dataLoading, preloadAll } = useAppStore();
   const router = useRouter();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!loading && !user) {
+    if (!authLoading && !user) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [user, authLoading, router]);
 
-  if (loading) {
+  // Preload data when user is authenticated
+  useEffect(() => {
+    if (user && !isReady && !dataLoading) {
+      preloadAll();
+    }
+  }, [user, isReady, dataLoading, preloadAll]);
+
+  // Show loading while auth is being checked
+  if (authLoading) {
     return (
       <div className="min-h-dvh flex items-center justify-center">
         <div className="text-muted-foreground">Loading...</div>
@@ -80,6 +91,16 @@ export default function MainLayout() {
 
   if (!user) {
     return null;
+  }
+
+  // Show loading while data is being preloaded
+  if (!isReady) {
+    return (
+      <div className="min-h-dvh flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
   }
 
   return (

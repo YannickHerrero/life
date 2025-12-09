@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useAppStore } from '@/lib/store';
 import { useSport } from '@/hooks/useSport';
 import type { SportActivity } from '@/types';
 
@@ -38,11 +39,18 @@ const trainingTypeLabels: Record<string, string> = {
 };
 
 export function SportHistory() {
-  const { activities, updateActivity, deleteActivity } = useSport();
+  const sportActivities = useAppStore((s) => s.sportActivities);
+  const { updateActivity, deleteActivity } = useSport();
   const [editingEntry, setEditingEntry] = useState<SportActivity | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editDuration, setEditDuration] = useState('');
   const [editDistance, setEditDistance] = useState('');
+
+  // Sort activities by date descending
+  const sortedActivities = useMemo(
+    () => [...sportActivities].sort((a, b) => b.date.localeCompare(a.date)),
+    [sportActivities]
+  );
 
   const handleEdit = (entry: SportActivity) => {
     setEditingEntry(entry);
@@ -78,7 +86,7 @@ export function SportHistory() {
     setDeletingId(null);
   };
 
-  if (!activities || activities.length === 0) {
+  if (sortedActivities.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No sport activities logged yet
@@ -89,7 +97,7 @@ export function SportHistory() {
   return (
     <>
       <div className="space-y-2">
-        {activities.map((entry) => (
+        {sortedActivities.map((entry) => (
           <div
             key={entry.id}
             className="flex items-center justify-between p-3 rounded-lg border bg-card"

@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SportHeatmap } from '@/components/charts/sport-heatmap';
 import { BarChart } from '@/components/charts/bar-chart';
-import { useSportStats } from '@/hooks/useSport';
-import { SportType } from '@/types';
+import { useAppStore } from '@/lib/store';
 
 type Period = '1m' | '3m' | '1y';
 
@@ -19,31 +18,43 @@ function formatMinutes(minutes: number): string {
 }
 
 export function Sport() {
-  const { getTimeStats, dailyActivityMap, getWeeklyRunningDistances } = useSportStats();
+  const sportActivities = useAppStore((s) => s.sportActivities);
+  const sportStats = useAppStore((s) => s.sportStats);
   const [period, setPeriod] = useState<Period>('3m');
-  const [runningDistances, setRunningDistances] = useState<{ week: string; distance: number }[]>([]);
 
-  const runningStats = getTimeStats(SportType.RUNNING);
-  const workoutStats = getTimeStats(SportType.STREET_WORKOUT);
-  const bikeStats = getTimeStats(SportType.BIKE);
-
-  // Load running distances based on period
-  useEffect(() => {
-    const monthsBack = period === '1m' ? 1 : period === '3m' ? 3 : 12;
-    const distances = getWeeklyRunningDistances(monthsBack);
-    setRunningDistances(distances);
-  }, [period, getWeeklyRunningDistances]);
-
-  // Format bar chart data
+  // Get weekly running distances based on period
   const barChartData = useMemo(() => {
-    return runningDistances.map((d) => {
-      const date = new Date(d.week);
-      return {
-        label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        value: d.distance,
-      };
-    });
-  }, [runningDistances]);
+    const monthsBack = period === '1m' ? 1 : period === '3m' ? 3 : 12;
+    const now = new Date();
+    const cutoffDate = new Date(now);
+    cutoffDate.setMonth(now.getMonth() - monthsBack);
+
+    const runningActivities = sportActivities.filter((a) => a.sportType === 'running');
+    const weeklyDistances = new Map<string, number>();
+
+    for (const activity of runningActivities) {
+      const activityDate = new Date(activity.date);
+      if (activityDate < cutoffDate) continue;
+
+      // Get week start (Sunday)
+      const weekStart = new Date(activityDate);
+      weekStart.setDate(activityDate.getDate() - activityDate.getDay());
+      const weekKey = weekStart.toISOString().split('T')[0];
+
+      const current = weeklyDistances.get(weekKey) ?? 0;
+      weeklyDistances.set(weekKey, current + (activity.distanceKm ?? 0));
+    }
+
+    return Array.from(weeklyDistances.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([week, distance]) => {
+        const date = new Date(week);
+        return {
+          label: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          value: Math.round(distance * 10) / 10,
+        };
+      });
+  }, [sportActivities, period]);
 
   return (
     <div className="p-4 space-y-6">
@@ -55,7 +66,7 @@ export function Sport() {
           <CardTitle className="text-base">Activity Heatmap</CardTitle>
         </CardHeader>
         <CardContent>
-          <SportHeatmap data={dailyActivityMap} />
+          <SportHeatmap data={sportStats.dailyActivityMap} />
         </CardContent>
       </Card>
 
@@ -69,15 +80,15 @@ export function Sport() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-xl font-bold">{formatMinutes(runningStats.thisWeek)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.runningStats.thisWeek)}</p>
                 <p className="text-xs text-muted-foreground">This Week</p>
               </div>
               <div>
-                <p className="text-xl font-bold">{formatMinutes(runningStats.thisMonth)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.runningStats.thisMonth)}</p>
                 <p className="text-xs text-muted-foreground">This Month</p>
               </div>
               <div>
-                <p className="text-xl font-bold">{formatMinutes(runningStats.thisYear)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.runningStats.thisYear)}</p>
                 <p className="text-xs text-muted-foreground">This Year</p>
               </div>
             </div>
@@ -92,15 +103,15 @@ export function Sport() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-xl font-bold">{formatMinutes(workoutStats.thisWeek)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.workoutStats.thisWeek)}</p>
                 <p className="text-xs text-muted-foreground">This Week</p>
               </div>
               <div>
-                <p className="text-xl font-bold">{formatMinutes(workoutStats.thisMonth)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.workoutStats.thisMonth)}</p>
                 <p className="text-xs text-muted-foreground">This Month</p>
               </div>
               <div>
-                <p className="text-xl font-bold">{formatMinutes(workoutStats.thisYear)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.workoutStats.thisYear)}</p>
                 <p className="text-xs text-muted-foreground">This Year</p>
               </div>
             </div>
@@ -115,15 +126,15 @@ export function Sport() {
           <CardContent>
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-xl font-bold">{formatMinutes(bikeStats.thisWeek)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.bikeStats.thisWeek)}</p>
                 <p className="text-xs text-muted-foreground">This Week</p>
               </div>
               <div>
-                <p className="text-xl font-bold">{formatMinutes(bikeStats.thisMonth)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.bikeStats.thisMonth)}</p>
                 <p className="text-xs text-muted-foreground">This Month</p>
               </div>
               <div>
-                <p className="text-xl font-bold">{formatMinutes(bikeStats.thisYear)}</p>
+                <p className="text-xl font-bold">{formatMinutes(sportStats.bikeStats.thisYear)}</p>
                 <p className="text-xs text-muted-foreground">This Year</p>
               </div>
             </div>
