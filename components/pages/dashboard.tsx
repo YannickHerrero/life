@@ -166,6 +166,7 @@ export function Dashboard() {
               key={key}
               variant="outline"
               className="h-32 flex flex-col gap-3 text-base"
+              pressMode="press"
               onClick={() => handleInputClick(key)}
             >
               <Icon className="h-8 w-8" />

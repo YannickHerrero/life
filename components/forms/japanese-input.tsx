@@ -221,6 +221,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
               key={type}
               variant="outline"
               className="h-24 flex flex-col gap-2"
+              pressMode="press"
               onClick={() => handleTypeSelect(type)}
             >
               <Icon className="h-6 w-6" />
@@ -238,7 +239,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
       <div className="space-y-4">
         <button
           type="button"
-          onClick={handleBack}
+          onPointerDown={handleBack}
           className={cn(
             'flex items-center gap-2 text-sm text-muted-foreground',
             'hover:text-foreground transition-colors'
@@ -267,7 +268,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
               <p className="text-sm font-medium text-muted-foreground mb-2">Continue Reading</p>
               <button
                 type="button"
-                onClick={() => handleBookSelect(lastReadBook)}
+                onPointerDown={() => handleBookSelect(lastReadBook)}
                 className={cn(
                   'w-full text-left px-3 py-2 rounded-md transition-colors',
                   selectedBook?.id === lastReadBook.id
@@ -297,7 +298,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
                     <button
                       key={book.id}
                       type="button"
-                      onClick={() => handleBookSelect(book)}
+                      onPointerDown={() => handleBookSelect(book)}
                       className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
                     >
                       <p className="font-medium">{book.title}</p>
@@ -317,11 +318,11 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
 
         {/* Action buttons */}
         <div className="space-y-2">
-          <Button variant="outline" className="w-full" onClick={handleNewBook}>
+          <Button variant="outline" className="w-full" pressMode="press" onClick={handleNewBook}>
             <Plus className="h-4 w-4 mr-2" />
             Add New Book
           </Button>
-          <Button variant="ghost" className="w-full" onClick={handleSkipBook}>
+          <Button variant="ghost" className="w-full" pressMode="press" onClick={handleSkipBook}>
             Skip - Log without book
           </Button>
         </div>
@@ -335,7 +336,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
       <form onSubmit={handleCreateBook} className="space-y-6">
         <button
           type="button"
-          onClick={handleBack}
+          onPointerDown={handleBack}
           className={cn(
             'flex items-center gap-2 text-sm text-muted-foreground',
             'hover:text-foreground transition-colors'
@@ -373,7 +374,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
       {/* Selected type indicator */}
       <button
         type="button"
-        onClick={handleBack}
+        onPointerDown={handleBack}
         className={cn(
           'flex items-center gap-2 text-sm text-muted-foreground',
           'hover:text-foreground transition-colors'
@@ -389,7 +390,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
       {selectedType === JapaneseActivityType.READING && (
         <button
           type="button"
-          onClick={() => setStep('book-select')}
+          onPointerDown={() => setStep('book-select')}
           className="w-full p-3 rounded-lg bg-muted/50 text-left hover:bg-muted transition-colors"
         >
           <p className="text-sm text-muted-foreground">Book</p>

@@ -121,6 +121,7 @@ export function SportInput({ onSuccess }: SportInputProps) {
               key={type}
               variant="outline"
               className="h-20 flex items-center justify-start gap-4 px-6"
+              pressMode="press"
               onClick={() => handleTypeSelect(type)}
             >
               <Icon className="h-6 w-6" />
@@ -139,7 +140,7 @@ export function SportInput({ onSuccess }: SportInputProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <button
         type="button"
-        onClick={handleBack}
+        onPointerDown={handleBack}
         className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <span>&larr;</span>
