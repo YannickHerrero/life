@@ -33,6 +33,19 @@ export function useJapanese() {
     };
 
     await db.japaneseActivities.add(activity);
+
+    // If this is a reading activity with a book, update the book's total time
+    if (input.type === 'reading' && input.bookId) {
+      const book = await db.books.get(input.bookId);
+      if (book) {
+        const updatedBook = markForSync({
+          ...book,
+          totalReadingTimeMinutes: book.totalReadingTimeMinutes + input.durationMinutes,
+        });
+        await db.books.put(updatedBook);
+      }
+    }
+
     triggerSync();
   };
 

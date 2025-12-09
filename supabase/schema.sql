@@ -5,6 +5,19 @@
 -- TABLES
 -- ============================================
 
+-- Books (for reading tracking)
+create table if not exists books (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  title text not null,
+  completed boolean not null default false,
+  completed_at timestamptz,
+  total_reading_time_minutes integer not null default 0 check (total_reading_time_minutes >= 0),
+  created_at timestamptz default now() not null,
+  updated_at timestamptz default now() not null,
+  deleted_at timestamptz
+);
+
 -- Japanese Activities
 create table if not exists japanese_activities (
   id uuid primary key default gen_random_uuid(),
@@ -12,6 +25,7 @@ create table if not exists japanese_activities (
   type text not null check (type in ('flashcards', 'reading', 'watching', 'listening')),
   duration_minutes integer not null check (duration_minutes > 0),
   new_cards integer check (new_cards >= 0),
+  book_id uuid references books(id) on delete set null,
   date date not null,
   created_at timestamptz default now() not null,
   updated_at timestamptz default now() not null,
@@ -75,8 +89,13 @@ create table if not exists weight_entries (
 -- INDEXES
 -- ============================================
 
+create index if not exists idx_books_user on books(user_id);
+create index if not exists idx_books_updated on books(updated_at);
+create index if not exists idx_books_completed on books(user_id, completed);
+
 create index if not exists idx_japanese_activities_user_date on japanese_activities(user_id, date);
 create index if not exists idx_japanese_activities_updated on japanese_activities(updated_at);
+create index if not exists idx_japanese_activities_book on japanese_activities(book_id);
 
 create index if not exists idx_foods_user on foods(user_id);
 create index if not exists idx_foods_updated on foods(updated_at);
@@ -94,11 +113,29 @@ create index if not exists idx_weight_entries_updated on weight_entries(updated_
 -- ROW LEVEL SECURITY
 -- ============================================
 
+alter table books enable row level security;
 alter table japanese_activities enable row level security;
 alter table foods enable row level security;
 alter table meal_entries enable row level security;
 alter table sport_activities enable row level security;
 alter table weight_entries enable row level security;
+
+-- Books policies
+create policy "Users can view own books"
+  on books for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own books"
+  on books for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own books"
+  on books for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own books"
+  on books for delete
+  using (auth.uid() = user_id);
 
 -- Japanese Activities policies
 create policy "Users can view own japanese_activities"
@@ -196,6 +233,10 @@ begin
   return new;
 end;
 $$ language plpgsql;
+
+create trigger update_books_updated_at
+  before update on books
+  for each row execute function update_updated_at_column();
 
 create trigger update_japanese_activities_updated_at
   before update on japanese_activities

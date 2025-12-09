@@ -27,6 +27,7 @@ export function isSupabaseConfigured(): boolean {
 
 // Database table names (matching Supabase schema)
 export const Tables = {
+  BOOKS: 'books',
   JAPANESE_ACTIVITIES: 'japanese_activities',
   FOODS: 'foods',
   MEAL_ENTRIES: 'meal_entries',
@@ -61,7 +62,7 @@ export function fromSupabaseRecord<T>(record: Record<string, unknown>): T {
       .replace(/_(\d)/g, '$1');
     // Convert date strings back to Date objects for known date fields
     if (
-      (camelKey === 'createdAt' || camelKey === 'updatedAt' || camelKey === 'deletedAt') &&
+      (camelKey === 'createdAt' || camelKey === 'updatedAt' || camelKey === 'deletedAt' || camelKey === 'completedAt') &&
       typeof value === 'string'
     ) {
       camelCase[camelKey] = new Date(value);
