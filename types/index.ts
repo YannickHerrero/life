@@ -39,10 +39,18 @@ export interface SyncableEntity {
 }
 
 // Data Models
+export interface Book extends SyncableEntity {
+  title: string;
+  completed: boolean;
+  completedAt: Date | null;
+  totalReadingTimeMinutes: number;
+}
+
 export interface JapaneseActivity extends SyncableEntity {
   type: JapaneseActivityType;
   durationMinutes: number;
   newCards: number | null; // Only for flashcards
+  bookId: string | null; // Only for reading
   date: string; // ISO date string YYYY-MM-DD
 }
 
@@ -81,6 +89,7 @@ export interface SyncMeta {
 }
 
 // Form input types (without sync fields)
+export type BookInput = Omit<Book, keyof SyncableEntity>;
 export type JapaneseActivityInput = Omit<JapaneseActivity, keyof SyncableEntity>;
 export type FoodInput = Omit<Food, keyof SyncableEntity>;
 export type MealEntryInput = Omit<MealEntry, keyof SyncableEntity>;

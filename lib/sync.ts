@@ -11,6 +11,7 @@ import type {
   MealEntry,
   SportActivity,
   WeightEntry,
+  Book,
   SyncableEntity,
 } from '@/types';
 
@@ -138,6 +139,7 @@ async function pullTable<T extends SyncableEntity>(
 // Push all local changes to Supabase
 export async function pushLocalChanges(userId: string): Promise<void> {
   await Promise.all([
+    pushTable<Book>(db.books as unknown as DexieTable<Book>, Tables.BOOKS, userId),
     pushTable<JapaneseActivity>(db.japaneseActivities as unknown as DexieTable<JapaneseActivity>, Tables.JAPANESE_ACTIVITIES, userId),
     pushTable<Food>(db.foods as unknown as DexieTable<Food>, Tables.FOODS, userId),
     pushTable<MealEntry>(db.mealEntries as unknown as DexieTable<MealEntry>, Tables.MEAL_ENTRIES, userId),
@@ -149,6 +151,7 @@ export async function pushLocalChanges(userId: string): Promise<void> {
 // Pull remote changes from Supabase
 export async function pullRemoteChanges(userId: string, since: Date | null): Promise<void> {
   await Promise.all([
+    pullTable<Book>(db.books as unknown as DexieTable<Book>, Tables.BOOKS, userId, since),
     pullTable<JapaneseActivity>(db.japaneseActivities as unknown as DexieTable<JapaneseActivity>, Tables.JAPANESE_ACTIVITIES, userId, since),
     pullTable<Food>(db.foods as unknown as DexieTable<Food>, Tables.FOODS, userId, since),
     pullTable<MealEntry>(db.mealEntries as unknown as DexieTable<MealEntry>, Tables.MEAL_ENTRIES, userId, since),

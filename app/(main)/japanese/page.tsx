@@ -1,10 +1,11 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import { useJapaneseStats } from '@/hooks/useJapanese';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActivityHeatmap } from '@/components/charts/activity-heatmap';
-import { Flame } from 'lucide-react';
+import { Flame, BookOpen, ChevronRight } from 'lucide-react';
 
 function formatMinutes(minutes: number): string {
   const hours = Math.floor(minutes / 60);
@@ -128,6 +129,24 @@ export default function JapanesePage() {
           />
         </CardContent>
       </Card>
+
+      {/* Reading Details Link */}
+      <Link href="/japanese/reading" className="mt-2 block">
+        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <BookOpen className="h-5 w-5" />
+              <div>
+                <p className="font-medium">Reading</p>
+                <p className="text-sm text-muted-foreground">
+                  View your book collection
+                </p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   );
 }

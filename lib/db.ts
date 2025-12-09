@@ -5,6 +5,7 @@ import type {
   MealEntry,
   SportActivity,
   WeightEntry,
+  Book,
   SyncMeta,
 } from '@/types';
 
@@ -14,6 +15,7 @@ export class LifeDB extends Dexie {
   mealEntries!: EntityTable<MealEntry, 'id'>;
   sportActivities!: EntityTable<SportActivity, 'id'>;
   weightEntries!: EntityTable<WeightEntry, 'id'>;
+  books!: EntityTable<Book, 'id'>;
   syncMeta!: EntityTable<SyncMeta, 'key'>;
 
   constructor() {
@@ -25,6 +27,16 @@ export class LifeDB extends Dexie {
       mealEntries: 'id, date, foodId, mealType, pendingSync, deletedAt',
       sportActivities: 'id, date, sportType, pendingSync, deletedAt',
       weightEntries: 'id, date, pendingSync, deletedAt',
+      syncMeta: 'key',
+    });
+
+    this.version(2).stores({
+      japaneseActivities: 'id, date, type, bookId, pendingSync, deletedAt',
+      foods: 'id, name, pendingSync, deletedAt',
+      mealEntries: 'id, date, foodId, mealType, pendingSync, deletedAt',
+      sportActivities: 'id, date, sportType, pendingSync, deletedAt',
+      weightEntries: 'id, date, pendingSync, deletedAt',
+      books: 'id, title, completed, pendingSync, deletedAt',
       syncMeta: 'key',
     });
   }
