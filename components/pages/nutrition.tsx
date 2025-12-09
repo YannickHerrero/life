@@ -19,7 +19,7 @@ import type { MacroTotals } from '@/types';
 
 type Period = '1m' | '3m' | '1y';
 
-export default function NutritionPage() {
+export function Nutrition() {
   const { getDailyMacros, getMealsForDate, getWeeklyAverages, mealEntries } = useNutritionStats();
   const { getWeightHistory } = useWeight();
 

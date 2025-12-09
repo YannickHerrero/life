@@ -18,7 +18,7 @@ function formatMinutes(minutes: number): string {
   return `${hours}h ${mins}m`;
 }
 
-export default function SportPage() {
+export function Sport() {
   const { getTimeStats, dailyActivityMap, getWeeklyRunningDistances } = useSportStats();
   const [period, setPeriod] = useState<Period>('3m');
   const [runningDistances, setRunningDistances] = useState<{ week: string; distance: number }[]>([]);
