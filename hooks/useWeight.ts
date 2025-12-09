@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, createSyncableEntity, markForSync } from '@/lib/db';
 import { useSync } from './useSync';
@@ -55,13 +56,13 @@ export function useWeight() {
   };
 
   // Get weight for a specific date
-  const getWeightForDate = async (date: string): Promise<WeightEntry | undefined> => {
+  const getWeightForDate = useCallback(async (date: string): Promise<WeightEntry | undefined> => {
     return db.weightEntries
       .where('date')
       .equals(date)
       .filter((e) => !e.deletedAt)
       .first();
-  };
+  }, []);
 
   // Get weight history for graphing
   const getWeightHistory = async (
@@ -84,13 +85,13 @@ export function useWeight() {
   };
 
   // Get latest weight
-  const getLatestWeight = async (): Promise<WeightEntry | undefined> => {
+  const getLatestWeight = useCallback(async (): Promise<WeightEntry | undefined> => {
     const sorted = await db.weightEntries
       .filter((e) => !e.deletedAt)
       .reverse()
       .sortBy('date');
     return sorted[0];
-  };
+  }, []);
 
   return {
     entries,
