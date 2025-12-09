@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useBooks } from '@/hooks/useBooks';
+import { useNavigation } from '@/lib/navigation-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Check, MoreVertical, Trash2, RotateCcw } from 'lucide-react';
+import { BookOpen, Check, MoreVertical, Trash2, RotateCcw, ChevronLeft } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,8 +32,9 @@ function formatMinutes(minutes: number): string {
   return `${hours}h ${mins}m`;
 }
 
-export default function ReadingPage() {
+export function JapaneseReading() {
   const { inProgressBooks, completedBooks, markComplete, markIncomplete, deleteBook } = useBooks();
+  const { goBack } = useNavigation();
   const [deleteTarget, setDeleteTarget] = useState<Book | null>(null);
 
   const handleMarkComplete = async (bookId: string) => {
@@ -95,7 +97,12 @@ export default function ReadingPage() {
 
   return (
     <div className="p-4 space-y-6">
-      <h1 className="text-xl font-semibold">Reading</h1>
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" onClick={goBack}>
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-semibold">Reading</h1>
+      </div>
 
       {/* In Progress Section */}
       <Card>

@@ -8,7 +8,7 @@ import { SportHistory } from '@/components/history/sport-history';
 
 type HistoryTab = 'japanese' | 'nutrition' | 'sport';
 
-export default function HistoryPage() {
+export function History() {
   const [activeTab, setActiveTab] = useState<HistoryTab>('japanese');
 
   return (

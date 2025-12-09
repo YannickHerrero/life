@@ -48,7 +48,7 @@ const inputConfig = {
   },
 };
 
-export default function DashboardPage() {
+export function Dashboard() {
   const [activeInput, setActiveInput] = useState<InputType>(null);
   const [todayCalories, setTodayCalories] = useState(0);
   const todayStr = today();
@@ -96,18 +96,17 @@ export default function DashboardPage() {
   // Calculate calories when meal entries change
   useEffect(() => {
     const calculateCalories = async () => {
-      if (!mealEntries) {
+      if (!mealEntries?.length) {
         setTodayCalories(0);
         return;
       }
 
-      let total = 0;
-      for (const entry of mealEntries) {
-        const food = await db.foods.get(entry.foodId);
-        if (food) {
-          total += (food.caloriesPer100g * entry.quantityGrams) / 100;
-        }
-      }
+      const foodIds = mealEntries.map((e) => e.foodId);
+      const foods = await db.foods.bulkGet(foodIds);
+      const total = mealEntries.reduce((sum, entry, i) => {
+        const food = foods[i];
+        return food ? sum + (food.caloriesPer100g * entry.quantityGrams) / 100 : sum;
+      }, 0);
       setTodayCalories(Math.round(total));
     };
 

@@ -3,17 +3,18 @@
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/lib/auth-context';
 import { useSync } from '@/hooks/useSync';
+import { useNavigation } from '@/lib/navigation-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { LogOut, RefreshCw, History, Sun, Moon, Monitor } from 'lucide-react';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
-export default function SettingsPage() {
+export function Settings() {
   const { user, signOut } = useAuth();
   const { status, lastSynced, sync } = useSync();
   const { theme, setTheme } = useTheme();
+  const { navigate } = useNavigation();
 
   const formatLastSynced = () => {
     if (!lastSynced) return 'Never';
@@ -109,11 +110,13 @@ export default function SettingsPage() {
       {/* History Link */}
       <Card>
         <CardContent className="pt-6">
-          <Button variant="outline" className="w-full justify-start" asChild>
-            <Link href="/history">
-              <History className="h-4 w-4 mr-2" />
-              View History
-            </Link>
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => navigate('history')}
+          >
+            <History className="h-4 w-4 mr-2" />
+            View History
           </Button>
         </CardContent>
       </Card>

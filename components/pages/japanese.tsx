@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import Link from 'next/link';
 import { useJapaneseStats } from '@/hooks/useJapanese';
+import { useNavigation } from '@/lib/navigation-context';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActivityHeatmap } from '@/components/charts/activity-heatmap';
 import { Flame, BookOpen, ChevronRight } from 'lucide-react';
@@ -15,8 +15,9 @@ function formatMinutes(minutes: number): string {
   return `${hours}h ${mins}m`;
 }
 
-export default function JapanesePage() {
+export function Japanese() {
   const { streaks, flashcardStats, timeStats, dailyTimeMap } = useJapaneseStats();
+  const { navigate } = useNavigation();
 
   // Convert Map to the format expected by heatmap
   const heatmapData = useMemo(() => {
@@ -131,7 +132,10 @@ export default function JapanesePage() {
       </Card>
 
       {/* Reading Details Link */}
-      <Link href="/japanese/reading" className="mt-2 block">
+      <button
+        onClick={() => navigate('japanese', 'japanese/reading')}
+        className="mt-2 block w-full text-left"
+      >
         <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
           <CardContent className="flex items-center justify-between py-4">
             <div className="flex items-center gap-3">
@@ -146,7 +150,7 @@ export default function JapanesePage() {
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
           </CardContent>
         </Card>
-      </Link>
+      </button>
     </div>
   );
 }
