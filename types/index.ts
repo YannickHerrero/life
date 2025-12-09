@@ -42,6 +42,7 @@ export interface SyncableEntity {
 export interface Book extends SyncableEntity {
   title: string;
   completed: boolean;
+  startedAt: Date | null;
   completedAt: Date | null;
   totalReadingTimeMinutes: number;
 }

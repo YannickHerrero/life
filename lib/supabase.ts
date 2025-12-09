@@ -62,7 +62,7 @@ export function fromSupabaseRecord<T>(record: Record<string, unknown>): T {
       .replace(/_(\d)/g, '$1');
     // Convert date strings back to Date objects for known date fields
     if (
-      (camelKey === 'createdAt' || camelKey === 'updatedAt' || camelKey === 'deletedAt' || camelKey === 'completedAt') &&
+      (camelKey === 'createdAt' || camelKey === 'updatedAt' || camelKey === 'deletedAt' || camelKey === 'startedAt' || camelKey === 'completedAt') &&
       typeof value === 'string'
     ) {
       camelCase[camelKey] = new Date(value);

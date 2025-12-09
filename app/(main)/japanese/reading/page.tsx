@@ -58,6 +58,7 @@ export default function ReadingPage() {
           <p className="font-medium truncate">{book.title}</p>
           <p className="text-sm text-muted-foreground">
             {formatMinutes(book.totalReadingTimeMinutes)} read
+            {book.startedAt && ` · Started ${new Date(book.startedAt).toLocaleDateString()}`}
             {book.completedAt && ` · Completed ${new Date(book.completedAt).toLocaleDateString()}`}
           </p>
         </div>
