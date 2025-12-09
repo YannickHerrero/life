@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Languages, UtensilsCrossed, Dumbbell, Scale, Flame } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -82,6 +83,16 @@ export default function DashboardPage() {
     [todayStr]
   );
 
+  // Get today's weight entry
+  const todayWeight = useLiveQuery(
+    () => db.weightEntries
+      .where('date')
+      .equals(todayStr)
+      .filter((w) => !w.deletedAt)
+      .first(),
+    [todayStr]
+  );
+
   // Calculate calories when meal entries change
   useEffect(() => {
     const calculateCalories = async () => {
@@ -123,6 +134,14 @@ export default function DashboardPage() {
 
   const handleClose = () => {
     setActiveInput(null);
+  };
+
+  const handleInputClick = (key: InputType) => {
+    if (key === 'weight' && todayWeight) {
+      toast.info(`Weight already logged today: ${todayWeight.weightKg} kg`);
+      return;
+    }
+    setActiveInput(key);
   };
 
   return (
@@ -169,7 +188,7 @@ export default function DashboardPage() {
               key={key}
               variant="outline"
               className="h-32 flex flex-col gap-3 text-base"
-              onClick={() => setActiveInput(key)}
+              onClick={() => handleInputClick(key)}
             >
               <Icon className="h-8 w-8" />
               <span>{config.title}</span>
