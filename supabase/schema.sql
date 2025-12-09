@@ -11,6 +11,7 @@ create table if not exists books (
   user_id uuid references auth.users(id) on delete cascade not null,
   title text not null,
   completed boolean not null default false,
+  started_at timestamptz,
   completed_at timestamptz,
   total_reading_time_minutes integer not null default 0 check (total_reading_time_minutes >= 0),
   created_at timestamptz default now() not null,

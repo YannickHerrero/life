@@ -44,6 +44,7 @@ export function useBooks() {
       ...createSyncableEntity(),
       title,
       completed: false,
+      startedAt: null,
       completedAt: null,
       totalReadingTimeMinutes: 0,
     };

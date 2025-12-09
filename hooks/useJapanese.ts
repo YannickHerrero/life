@@ -34,13 +34,15 @@ export function useJapanese() {
 
     await db.japaneseActivities.add(activity);
 
-    // If this is a reading activity with a book, update the book's total time
+    // If this is a reading activity with a book, update the book's total time and start date
     if (input.type === 'reading' && input.bookId) {
       const book = await db.books.get(input.bookId);
       if (book) {
         const updatedBook = markForSync({
           ...book,
           totalReadingTimeMinutes: book.totalReadingTimeMinutes + input.durationMinutes,
+          // Set startedAt on first reading session
+          startedAt: book.startedAt ?? new Date(),
         });
         await db.books.put(updatedBook);
       }
