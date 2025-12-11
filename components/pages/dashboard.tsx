@@ -103,6 +103,46 @@ export function Dashboard() {
     [todaySport]
   );
 
+  // Calculate latest weight and comparison
+  const weightData = useMemo(() => {
+    if (!weightEntries.length) return null;
+
+    // Sort entries by date descending to get latest
+    const sorted = [...weightEntries].sort((a, b) => b.date.localeCompare(a.date));
+    const latest = sorted[0];
+
+    if (sorted.length < 2) {
+      // Only one entry, no comparison possible
+      return { current: latest.weightKg, diff: null };
+    }
+
+    // Get date from 7 days ago
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const weekAgoStr = weekAgo.toISOString().split('T')[0];
+
+    // Find the entry closest to a week ago (or older)
+    // First, try to find an entry from exactly a week ago or before
+    const olderEntries = sorted.filter((e) => e.date <= weekAgoStr);
+
+    let comparisonEntry;
+    if (olderEntries.length > 0) {
+      // Use the most recent entry that's at least a week old
+      comparisonEntry = olderEntries[0];
+    } else {
+      // Not enough history, use the oldest available entry
+      comparisonEntry = sorted[sorted.length - 1];
+    }
+
+    // Don't compare to self
+    if (comparisonEntry.id === latest.id) {
+      return { current: latest.weightKg, diff: null };
+    }
+
+    const diff = latest.weightKg - comparisonEntry.weightKg;
+    return { current: latest.weightKg, diff };
+  }, [weightEntries]);
+
   const formatTime = (minutes: number) => {
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
@@ -127,7 +167,7 @@ export function Dashboard() {
       {/* Overview Section */}
       <section>
         <h2 className="text-xl font-semibold mb-4">Overview</h2>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <Card className="py-3">
             <CardContent className="px-3 text-center">
               <Languages className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
@@ -147,6 +187,21 @@ export function Dashboard() {
               <Dumbbell className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
               <p className="text-lg font-semibold">{formatTime(sportMinutes)}</p>
               <p className="text-xs text-muted-foreground">Sport</p>
+            </CardContent>
+          </Card>
+          <Card className="py-3">
+            <CardContent className="px-3 text-center">
+              <Scale className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+              <p className="text-lg font-semibold">
+                {weightData ? `${weightData.current} kg` : '—'}
+              </p>
+              {weightData?.diff !== null && weightData?.diff !== undefined ? (
+                <p className={`text-xs ${weightData.diff > 0 ? 'text-red-500' : weightData.diff < 0 ? 'text-green-500' : 'text-muted-foreground'}`}>
+                  {weightData.diff > 0 ? '+' : ''}{weightData.diff.toFixed(1)} kg
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Weight</p>
+              )}
             </CardContent>
           </Card>
         </div>
