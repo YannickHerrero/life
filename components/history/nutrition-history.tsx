@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { format, parse } from 'date-fns';
+import { CalendarIcon, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { useAppStore } from '@/lib/store';
 import { useNutrition } from '@/hooks/useNutrition';
 import { parseDecimal } from '@/lib/utils';
@@ -41,6 +48,7 @@ export function NutritionHistory() {
   const [editingEntry, setEditingEntry] = useState<MealEntry | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState('');
+  const [editDate, setEditDate] = useState<Date>(new Date());
 
   // Create food map and entries with food info
   const foodMap = useMemo(() => new Map(foods.map((f) => [f.id, f])), [foods]);
@@ -58,6 +66,7 @@ export function NutritionHistory() {
   const handleEdit = (entry: MealEntry) => {
     setEditingEntry(entry);
     setEditQuantity(entry.quantityGrams.toString());
+    setEditDate(parse(entry.date, 'yyyy-MM-dd', new Date()));
   };
 
   const handleSaveEdit = async () => {
@@ -71,6 +80,7 @@ export function NutritionHistory() {
 
     await updateMealEntry(editingEntry.id, {
       quantityGrams: quantity,
+      date: format(editDate, 'yyyy-MM-dd'),
     });
 
     toast.success('Entry updated');
@@ -134,6 +144,25 @@ export function NutritionHistory() {
             <SheetTitle>Edit Entry</SheetTitle>
           </SheetHeader>
           <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(editDate, 'PPP')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editDate}
+                    onSelect={(date) => date && setEditDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-2">
               <Label>Quantity (grams)</Label>
               <Input
