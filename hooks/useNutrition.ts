@@ -159,6 +159,35 @@ export function useNutrition() {
     return db.foods.get(id);
   };
 
+  // Get last quantity used for a specific food
+  const getLastQuantityForFood = useCallback(async (foodId: string): Promise<number | null> => {
+    const entries = await db.mealEntries
+      .filter((m) => !m.deletedAt && m.foodId === foodId)
+      .reverse()
+      .sortBy('createdAt');
+
+    return entries.length > 0 ? entries[0].quantityGrams : null;
+  }, []);
+
+  // Get last quantities for multiple foods (batch operation)
+  const getLastQuantitiesForFoods = useCallback(async (foodIds: string[]): Promise<Map<string, number>> => {
+    const result = new Map<string, number>();
+
+    const entries = await db.mealEntries
+      .filter((m) => !m.deletedAt && foodIds.includes(m.foodId))
+      .reverse()
+      .sortBy('createdAt');
+
+    // Get the most recent entry for each food
+    for (const entry of entries) {
+      if (!result.has(entry.foodId)) {
+        result.set(entry.foodId, entry.quantityGrams);
+      }
+    }
+
+    return result;
+  }, []);
+
   return {
     foods,
     mealEntries,
@@ -171,6 +200,8 @@ export function useNutrition() {
     searchFoods,
     getRecentFoods,
     getFoodById,
+    getLastQuantityForFood,
+    getLastQuantitiesForFoods,
   };
 }
 
