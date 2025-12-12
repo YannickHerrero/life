@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { format, parse } from 'date-fns';
+import { CalendarIcon, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { useAppStore } from '@/lib/store';
 import { useJapanese } from '@/hooks/useJapanese';
 import type { JapaneseActivity } from '@/types';
@@ -40,6 +47,7 @@ export function JapaneseHistory() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editDuration, setEditDuration] = useState('');
   const [editNewCards, setEditNewCards] = useState('');
+  const [editDate, setEditDate] = useState<Date>(new Date());
 
   // Sort activities by date descending
   const sortedActivities = useMemo(
@@ -51,6 +59,7 @@ export function JapaneseHistory() {
     setEditingEntry(entry);
     setEditDuration(entry.durationMinutes.toString());
     setEditNewCards(entry.newCards?.toString() ?? '');
+    setEditDate(parse(entry.date, 'yyyy-MM-dd', new Date()));
   };
 
   const handleSaveEdit = async () => {
@@ -65,6 +74,7 @@ export function JapaneseHistory() {
     await updateActivity(editingEntry.id, {
       durationMinutes: duration,
       newCards: editingEntry.type === 'flashcards' ? parseInt(editNewCards, 10) || null : null,
+      date: format(editDate, 'yyyy-MM-dd'),
     });
 
     toast.success('Entry updated');
@@ -129,6 +139,25 @@ export function JapaneseHistory() {
             <SheetTitle>Edit Entry</SheetTitle>
           </SheetHeader>
           <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(editDate, 'PPP')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editDate}
+                    onSelect={(date) => date && setEditDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-2">
               <Label>Duration (minutes)</Label>
               <Input
