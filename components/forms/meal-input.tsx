@@ -27,7 +27,7 @@ const mealTypes = [
 ];
 
 export function MealInput({ onSuccess }: MealInputProps) {
-  const { addFood, addMealEntry, searchFoods, getRecentFoods } = useNutrition();
+  const { addFood, addMealEntry, searchFoods, getRecentFoods, getLastQuantitiesForFoods } = useNutrition();
 
   const [step, setStep] = useState<Step>('meal-type');
   const [selectedMealType, setSelectedMealType] = useState<MealType | null>(null);
@@ -35,6 +35,7 @@ export function MealInput({ onSuccess }: MealInputProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Food[]>([]);
   const [recentFoods, setRecentFoods] = useState<Food[]>([]);
+  const [lastQuantities, setLastQuantities] = useState<Map<string, number>>(new Map());
   const [quantity, setQuantity] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -52,6 +53,16 @@ export function MealInput({ onSuccess }: MealInputProps) {
       searchFoods('').then(setSearchResults);
     }
   }, [step, getRecentFoods, searchFoods]);
+
+  // Load last quantities for displayed foods
+  useEffect(() => {
+    if (step === 'food-select') {
+      const allFoodIds = [...new Set([...recentFoods.map(f => f.id), ...searchResults.map(f => f.id)])];
+      if (allFoodIds.length > 0) {
+        getLastQuantitiesForFoods(allFoodIds).then(setLastQuantities);
+      }
+    }
+  }, [step, recentFoods, searchResults, getLastQuantitiesForFoods]);
 
   // Search foods when query changes
   useEffect(() => {
@@ -212,18 +223,22 @@ export function MealInput({ onSuccess }: MealInputProps) {
             <div className="mb-4">
               <p className="text-sm font-medium text-muted-foreground mb-2">Recent</p>
               <div className="space-y-1">
-                {recentFoods.map((food) => (
-                  <button
-                    key={food.id}
-                    onPointerDown={() => handleFoodSelect(food)}
-                    className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
-                  >
-                    <p className="font-medium">{food.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {food.caloriesPer100g} kcal/100g
-                    </p>
-                  </button>
-                ))}
+                {recentFoods.map((food) => {
+                  const lastQty = lastQuantities.get(food.id);
+                  return (
+                    <button
+                      key={food.id}
+                      onPointerDown={() => handleFoodSelect(food)}
+                      className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
+                    >
+                      <p className="font-medium">{food.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {food.caloriesPer100g} kcal/100g
+                        {lastQty !== undefined && ` · last: ${lastQty}g`}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
               <Separator className="my-4" />
             </div>
@@ -235,18 +250,22 @@ export function MealInput({ onSuccess }: MealInputProps) {
               {searchQuery ? 'Results' : 'All Foods'}
             </p>
             <div className="space-y-1">
-              {searchResults.map((food) => (
-                <button
-                  key={food.id}
-                  onPointerDown={() => handleFoodSelect(food)}
-                  className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
-                >
-                  <p className="font-medium">{food.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {food.caloriesPer100g} kcal/100g
-                  </p>
-                </button>
-              ))}
+              {searchResults.map((food) => {
+                const lastQty = lastQuantities.get(food.id);
+                return (
+                  <button
+                    key={food.id}
+                    onPointerDown={() => handleFoodSelect(food)}
+                    className="w-full text-left px-3 py-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    <p className="font-medium">{food.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {food.caloriesPer100g} kcal/100g
+                      {lastQty !== undefined && ` · last: ${lastQty}g`}
+                    </p>
+                  </button>
+                );
+              })}
 
               {searchResults.length === 0 && (
                 <p className="text-sm text-muted-foreground px-3 py-2">
