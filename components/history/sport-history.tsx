@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Pencil, Trash2 } from 'lucide-react';
+import { format, parse } from 'date-fns';
+import { CalendarIcon, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { useAppStore } from '@/lib/store';
 import { useSport } from '@/hooks/useSport';
 import type { SportActivity } from '@/types';
@@ -45,6 +52,7 @@ export function SportHistory() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editDuration, setEditDuration] = useState('');
   const [editDistance, setEditDistance] = useState('');
+  const [editDate, setEditDate] = useState<Date>(new Date());
 
   // Sort activities by date descending
   const sortedActivities = useMemo(
@@ -56,6 +64,7 @@ export function SportHistory() {
     setEditingEntry(entry);
     setEditDuration(entry.durationMinutes.toString());
     setEditDistance(entry.distanceKm?.toString() ?? '');
+    setEditDate(parse(entry.date, 'yyyy-MM-dd', new Date()));
   };
 
   const handleSaveEdit = async () => {
@@ -72,6 +81,7 @@ export function SportHistory() {
     await updateActivity(editingEntry.id, {
       durationMinutes: duration,
       distanceKm: distance,
+      date: format(editDate, 'yyyy-MM-dd'),
     });
 
     toast.success('Entry updated');
@@ -137,6 +147,25 @@ export function SportHistory() {
             <SheetTitle>Edit Entry</SheetTitle>
           </SheetHeader>
           <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label>Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-full justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(editDate, 'PPP')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={editDate}
+                    onSelect={(date) => date && setEditDate(date)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className="space-y-2">
               <Label>Duration (minutes)</Label>
               <Input
