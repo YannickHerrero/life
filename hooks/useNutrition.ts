@@ -271,7 +271,7 @@ export function useNutritionStats() {
   const getWeeklyAverages = async (): Promise<MacroTotals> => {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
     startOfWeek.setHours(0, 0, 0, 0);
 
     const entries = await db.mealEntries

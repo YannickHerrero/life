@@ -11,7 +11,7 @@ interface ActivityHeatmapProps {
   onDayClick?: (date: string, value: number) => void;
 }
 
-const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // Default green color scale (like GitHub)
@@ -36,10 +36,10 @@ export function ActivityHeatmap({
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
 
-    // Adjust start to previous Sunday
+    // Adjust start to previous Monday
     const firstDay = startDate.getDay();
     const adjustedStart = new Date(startDate);
-    adjustedStart.setDate(adjustedStart.getDate() - firstDay);
+    adjustedStart.setDate(adjustedStart.getDate() - ((firstDay + 6) % 7));
 
     // Generate all weeks
     const weeks: { date: Date; value: number }[][] = [];
@@ -65,7 +65,7 @@ export function ActivityHeatmap({
 
       currentDate.setDate(currentDate.getDate() + 1);
 
-      if (currentDate.getDay() === 0 || currentDate > endDate) {
+      if (currentDate.getDay() === 1 || currentDate > endDate) {
         weeks.push(currentWeek);
         currentWeek = [];
 
