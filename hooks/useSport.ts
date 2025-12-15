@@ -101,7 +101,7 @@ export function useSportStats() {
     const filtered = activities.filter((a) => a.sportType === sportType);
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
     startOfWeek.setHours(0, 0, 0, 0);
 
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -166,9 +166,9 @@ export function useSportStats() {
         const activityDate = new Date(activity.date);
         if (activityDate < cutoffDate) continue;
 
-        // Get week start (Sunday)
+        // Get week start (Monday)
         const weekStart = new Date(activityDate);
-        weekStart.setDate(activityDate.getDate() - activityDate.getDay());
+        weekStart.setDate(activityDate.getDate() - ((activityDate.getDay() + 6) % 7));
         const weekKey = weekStart.toISOString().split('T')[0];
 
         const current = weeklyDistances.get(weekKey) ?? 0;
