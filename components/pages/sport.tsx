@@ -36,9 +36,9 @@ export function Sport() {
       const activityDate = new Date(activity.date);
       if (activityDate < cutoffDate) continue;
 
-      // Get week start (Sunday)
+      // Get week start (Monday)
       const weekStart = new Date(activityDate);
-      weekStart.setDate(activityDate.getDate() - activityDate.getDay());
+      weekStart.setDate(activityDate.getDate() - ((activityDate.getDay() + 6) % 7));
       const weekKey = weekStart.toISOString().split('T')[0];
 
       const current = weeklyDistances.get(weekKey) ?? 0;

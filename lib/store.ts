@@ -79,7 +79,7 @@ function computeStreaks(activities: JapaneseActivity[]): StreakInfo {
 function computePeriodStats(activities: { date: string; durationMinutes: number }[]): PeriodStats {
   const now = new Date();
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   startOfWeek.setHours(0, 0, 0, 0);
 
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -108,7 +108,7 @@ function computeFlashcardStats(activities: JapaneseActivity[]): PeriodStats {
   const flashcardActivities = activities.filter((a) => a.type === 'flashcards');
   const now = new Date();
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   startOfWeek.setHours(0, 0, 0, 0);
 
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -168,7 +168,7 @@ function computeSportDailyMap(activities: SportActivity[]): Map<string, { runnin
 function computeWeeklyAverages(mealEntries: MealEntry[], foods: Food[]): MacroTotals {
   const now = new Date();
   const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
+  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
   startOfWeek.setHours(0, 0, 0, 0);
 
   const foodMap = new Map(foods.map((f) => [f.id, f]));
