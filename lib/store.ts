@@ -165,6 +165,44 @@ function computeSportDailyMap(activities: SportActivity[]): Map<string, { runnin
   return map;
 }
 
+function computeAppStreak(
+  japaneseActivities: JapaneseActivity[],
+  mealEntries: MealEntry[],
+  sportActivities: SportActivity[],
+  weightEntries: WeightEntry[]
+): number {
+  // Collect all unique dates with any activity
+  const activeDates = new Set<string>();
+
+  japaneseActivities.forEach((a) => activeDates.add(a.date));
+  mealEntries.forEach((m) => activeDates.add(m.date));
+  sportActivities.forEach((s) => activeDates.add(s.date));
+  weightEntries.forEach((w) => activeDates.add(w.date));
+
+  if (activeDates.size === 0) {
+    return 0;
+  }
+
+  // Calculate current streak
+  let currentStreak = 0;
+  const todayStr = today();
+  const yesterdayDate = new Date();
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const yesterdayStr = toDateString(yesterdayDate);
+
+  if (activeDates.has(todayStr) || activeDates.has(yesterdayStr)) {
+    const startDate = activeDates.has(todayStr) ? todayStr : yesterdayStr;
+    const checkDate = new Date(startDate);
+
+    while (activeDates.has(toDateString(checkDate))) {
+      currentStreak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+  }
+
+  return currentStreak;
+}
+
 function computeWeeklyAverages(mealEntries: MealEntry[], foods: Food[]): MacroTotals {
   const now = new Date();
   const startOfWeek = new Date(now);
@@ -248,12 +286,14 @@ interface AppStore {
   japaneseStats: JapaneseStats;
   sportStats: SportStats;
   weeklyAverages: MacroTotals;
+  appStreak: number;
 
   // Actions
   preloadAll: () => Promise<void>;
   recomputeJapaneseStats: () => void;
   recomputeSportStats: () => void;
   recomputeNutritionStats: () => void;
+  recomputeAppStreak: () => void;
 
   // Optimistic update actions
   addJapaneseActivity: (activity: JapaneseActivity) => void;
@@ -310,6 +350,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
   japaneseStats: defaultJapaneseStats,
   sportStats: defaultSportStats,
   weeklyAverages: defaultWeeklyAverages,
+  appStreak: 0,
 
   // Preload all data
   preloadAll: async () => {
@@ -349,6 +390,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       };
 
       const weeklyAverages = computeWeeklyAverages(mealEntries, foods);
+      const appStreak = computeAppStreak(japaneseActivities, mealEntries, sportActivities, weightEntries);
 
       set({
         isLoading: false,
@@ -362,6 +404,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         japaneseStats,
         sportStats,
         weeklyAverages,
+        appStreak,
       });
     } catch (error) {
       console.error('Failed to preload data:', error);
@@ -399,12 +442,18 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set({ weeklyAverages: computeWeeklyAverages(mealEntries, foods) });
   },
 
+  recomputeAppStreak: () => {
+    const { japaneseActivities, mealEntries, sportActivities, weightEntries } = get();
+    set({ appStreak: computeAppStreak(japaneseActivities, mealEntries, sportActivities, weightEntries) });
+  },
+
   // Optimistic updates for Japanese activities
   addJapaneseActivity: (activity) => {
     set((state) => ({
       japaneseActivities: [...state.japaneseActivities, activity],
     }));
     get().recomputeJapaneseStats();
+    get().recomputeAppStreak();
   },
 
   updateJapaneseActivity: (activity) => {
@@ -414,6 +463,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       ),
     }));
     get().recomputeJapaneseStats();
+    get().recomputeAppStreak();
   },
 
   deleteJapaneseActivity: (id) => {
@@ -421,6 +471,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       japaneseActivities: state.japaneseActivities.filter((a) => a.id !== id),
     }));
     get().recomputeJapaneseStats();
+    get().recomputeAppStreak();
   },
 
   // Optimistic updates for Sport activities
@@ -429,6 +480,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       sportActivities: [...state.sportActivities, activity],
     }));
     get().recomputeSportStats();
+    get().recomputeAppStreak();
   },
 
   updateSportActivity: (activity) => {
@@ -438,6 +490,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       ),
     }));
     get().recomputeSportStats();
+    get().recomputeAppStreak();
   },
 
   deleteSportActivity: (id) => {
@@ -445,6 +498,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       sportActivities: state.sportActivities.filter((a) => a.id !== id),
     }));
     get().recomputeSportStats();
+    get().recomputeAppStreak();
   },
 
   // Optimistic updates for Meal entries
@@ -453,6 +507,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       mealEntries: [...state.mealEntries, entry],
     }));
     get().recomputeNutritionStats();
+    get().recomputeAppStreak();
   },
 
   updateMealEntry: (entry) => {
@@ -462,6 +517,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       ),
     }));
     get().recomputeNutritionStats();
+    get().recomputeAppStreak();
   },
 
   deleteMealEntry: (id) => {
@@ -469,6 +525,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       mealEntries: state.mealEntries.filter((m) => m.id !== id),
     }));
     get().recomputeNutritionStats();
+    get().recomputeAppStreak();
   },
 
   // Optimistic updates for Foods
@@ -490,6 +547,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
     set((state) => ({
       weightEntries: [...state.weightEntries, entry],
     }));
+    get().recomputeAppStreak();
   },
 
   updateWeightEntry: (entry) => {
@@ -498,12 +556,14 @@ export const useAppStore = create<AppStore>((set, get) => ({
         e.id === entry.id ? entry : e
       ),
     }));
+    get().recomputeAppStreak();
   },
 
   deleteWeightEntry: (id) => {
     set((state) => ({
       weightEntries: state.weightEntries.filter((e) => e.id !== id),
     }));
+    get().recomputeAppStreak();
   },
 
   // Optimistic updates for Books
