@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Languages, UtensilsCrossed, Dumbbell, Scale, Flame } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Languages, Dumbbell, Scale, Flame, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Sheet,
@@ -23,25 +22,21 @@ type InputType = 'japanese' | 'meal' | 'sport' | 'weight' | null;
 const inputConfig = {
   japanese: {
     title: 'Log Japanese',
-    icon: Languages,
     component: JapaneseInput,
     sheetClassName: 'h-[85dvh]',
   },
   meal: {
     title: 'Log Meal',
-    icon: UtensilsCrossed,
     component: MealInput,
     sheetClassName: 'h-[85dvh]',
   },
   sport: {
     title: 'Log Sport',
-    icon: Dumbbell,
     component: SportInput,
     sheetClassName: 'h-[85dvh]',
   },
   weight: {
     title: 'Log Weight',
-    icon: Scale,
     component: WeightInput,
     sheetClassName: '',
   },
@@ -49,9 +44,19 @@ const inputConfig = {
 
 export function Dashboard() {
   const [activeInput, setActiveInput] = useState<InputType>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const todayStr = today();
 
+  // Update clock every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Get data from store
+  const appStreak = useAppStore((s) => s.appStreak);
   const japaneseActivities = useAppStore((s) => s.japaneseActivities);
   const sportActivities = useAppStore((s) => s.sportActivities);
   const mealEntries = useAppStore((s) => s.mealEntries);
@@ -143,12 +148,31 @@ export function Dashboard() {
     return { current: latest.weightKg, diff };
   }, [weightEntries]);
 
-  const formatTime = (minutes: number) => {
+  // Format time display for stats
+  const formatDuration = (minutes: number) => {
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
   };
+
+  // Format clock time (12-hour format)
+  const formatClockTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Format date display
+  const formatDate = (date: Date) => {
+    const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+    const monthDay = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    return { dayOfWeek, monthDay };
+  };
+
+  const { dayOfWeek, monthDay } = formatDate(currentTime);
 
   const handleClose = () => {
     setActiveInput(null);
@@ -163,33 +187,60 @@ export function Dashboard() {
   };
 
   return (
-    <div className="p-4 space-y-6">
-      {/* Overview Section */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Overview</h2>
+    <div className="p-4 flex flex-col h-[calc(100dvh-7.5rem)]">
+      {/* Clock/Calendar Section */}
+      <section className="flex-1 flex flex-col items-center justify-center">
+        <p className="text-6xl font-light tracking-tight">
+          {formatClockTime(currentTime)}
+        </p>
+        <p className="text-lg text-muted-foreground mt-2">
+          {dayOfWeek}, {monthDay}
+        </p>
+        {appStreak > 0 && (
+          <div className="flex items-center gap-1.5 mt-6 text-muted-foreground">
+            <Zap className="h-4 w-4 text-orange-500" />
+            <span className="text-sm">{appStreak} day streak</span>
+          </div>
+        )}
+      </section>
+
+      {/* Overview Section - Aligned to Bottom */}
+      <section className="mt-auto pb-4">
         <div className="grid grid-cols-2 gap-3">
-          <Card className="py-3">
+          <Card 
+            className="py-3 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
+            onClick={() => handleInputClick('japanese')}
+          >
             <CardContent className="px-3 text-center">
               <Languages className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-lg font-semibold">{formatTime(japaneseMinutes)}</p>
+              <p className="text-lg font-semibold">{formatDuration(japaneseMinutes)}</p>
               <p className="text-xs text-muted-foreground">Japanese</p>
             </CardContent>
           </Card>
-          <Card className="py-3">
+          <Card 
+            className="py-3 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
+            onClick={() => handleInputClick('meal')}
+          >
             <CardContent className="px-3 text-center">
               <Flame className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
               <p className="text-lg font-semibold">{todayCalories}</p>
               <p className="text-xs text-muted-foreground">kcal</p>
             </CardContent>
           </Card>
-          <Card className="py-3">
+          <Card 
+            className="py-3 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
+            onClick={() => handleInputClick('sport')}
+          >
             <CardContent className="px-3 text-center">
               <Dumbbell className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-              <p className="text-lg font-semibold">{formatTime(sportMinutes)}</p>
+              <p className="text-lg font-semibold">{formatDuration(sportMinutes)}</p>
               <p className="text-xs text-muted-foreground">Sport</p>
             </CardContent>
           </Card>
-          <Card className="py-3">
+          <Card 
+            className="py-3 cursor-pointer hover:bg-muted/50 active:bg-muted transition-colors"
+            onClick={() => handleInputClick('weight')}
+          >
             <CardContent className="px-3 text-center">
               <Scale className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
               <p className="text-lg font-semibold">
@@ -204,31 +255,6 @@ export function Dashboard() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </section>
-
-      {/* Quick Actions Section */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-4">
-        {(Object.keys(inputConfig) as InputType[]).filter(Boolean).map((key) => {
-          if (!key) return null;
-          const config = inputConfig[key];
-          const Icon = config.icon;
-
-          return (
-            <Button
-              key={key}
-              variant="outline"
-              className="h-32 flex flex-col gap-3 text-base"
-              pressMode="press"
-              onClick={() => handleInputClick(key)}
-            >
-              <Icon className="h-8 w-8" />
-              <span>{config.title}</span>
-            </Button>
-          );
-        })}
         </div>
       </section>
 
