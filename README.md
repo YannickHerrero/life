@@ -12,6 +12,28 @@ Personal habit tracking for Japanese learning, nutrition, sport, and weight.
 
 Life is a personal tracking web application for monitoring daily habits across four domains. The app prioritizes fast data input and insightful statistics visualization with an offline-first architecture.
 
+## Performance Optimizations
+
+This app is designed for perceived instant response times, especially on mobile PWA.
+
+### Local-First Architecture
+All data is stored in IndexedDB (via Dexie.js) and accessed locally first. Network sync happens in the background, so the UI never waits for server responses.
+
+### Optimistic Updates
+When adding or modifying data, the UI updates immediately via Zustand store before the database write completes. Users see instant feedback.
+
+### Cache-First Service Worker
+Navigation requests use a `CacheFirst` strategy - the PWA loads instantly from cache without waiting for the network. Users can manually refresh via Settings when updates are available.
+
+### Debounced Background Sync
+Data changes trigger a sync to Supabase with a 2-second debounce, batching rapid inputs and preventing excessive network requests.
+
+### Press-on-Down Interactions
+Critical buttons use `onPointerDown` instead of `onClick`, eliminating the ~100ms delay on mobile touch events for instant tactile feedback.
+
+### Reduced Animation Durations
+UI animations (sheets, dialogs) use shortened durations to minimize perceived latency while maintaining visual polish.
+
 ## Features
 
 ### Japanese Learning
