@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Settings as SettingsIcon, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useAppStore } from '@/lib/store';
+import { useServiceWorker } from '@/hooks/useServiceWorker';
 import { NavigationProvider, useNavigation } from '@/lib/navigation-context';
 import { BottomNav } from '@/components/bottom-nav';
 import { Button } from '@/components/ui/button';
@@ -47,13 +48,17 @@ function MainContent() {
 
 function Header() {
   const { navigate } = useNavigation();
+  const { updateAvailable } = useServiceWorker();
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between px-4">
         <h1 className="text-lg font-semibold">Life</h1>
-        <Button variant="ghost" size="icon" onClick={() => navigate('settings')}>
+        <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('settings')}>
           <SettingsIcon className="h-5 w-5" />
+          {updateAvailable && (
+            <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+          )}
           <span className="sr-only">Settings</span>
         </Button>
       </div>

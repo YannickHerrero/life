@@ -232,6 +232,10 @@ interface AppStore {
   isLoading: boolean;
   isReady: boolean;
 
+  // App update state
+  updateAvailable: boolean;
+  setUpdateAvailable: (available: boolean) => void;
+
   // Raw data
   japaneseActivities: JapaneseActivity[];
   sportActivities: SportActivity[];
@@ -291,6 +295,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   // Initial state
   isLoading: false,
   isReady: false,
+
+  // App update state
+  updateAvailable: false,
+  setUpdateAvailable: (available) => set({ updateAvailable: available }),
 
   japaneseActivities: [],
   sportActivities: [],

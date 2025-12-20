@@ -1,20 +1,30 @@
 'use client';
 
+import { useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/lib/auth-context';
 import { useSync } from '@/hooks/useSync';
+import { useServiceWorker } from '@/hooks/useServiceWorker';
 import { useNavigation } from '@/lib/navigation-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { LogOut, RefreshCw, History, Sun, Moon, Monitor } from 'lucide-react';
+import { LogOut, RefreshCw, History, Sun, Moon, Monitor, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Settings() {
   const { user, signOut } = useAuth();
   const { status, lastSynced, sync } = useSync();
+  const { updateAvailable, refreshApp } = useServiceWorker();
   const { theme, setTheme } = useTheme();
   const { navigate } = useNavigation();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshApp = async () => {
+    setIsRefreshing(true);
+    await refreshApp();
+    // Note: page will reload, so setIsRefreshing(false) won't be reached
+  };
 
   const formatLastSynced = () => {
     if (!lastSynced) return 'Never';
@@ -122,6 +132,43 @@ export function Settings() {
             <History className="h-4 w-4 mr-2" />
             View History
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* App Update */}
+      <Card className={updateAvailable ? 'border-primary' : ''}>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            App
+            {updateAvailable && (
+              <span className="text-xs font-normal text-primary">Update available</span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">
+                {updateAvailable ? 'Update App' : 'Refresh App'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {updateAvailable 
+                  ? 'A new version is available' 
+                  : 'Clear cache and get latest version'}
+              </p>
+            </div>
+            <Button
+              variant={updateAvailable ? 'default' : 'outline'}
+              size="sm"
+              onClick={handleRefreshApp}
+              disabled={isRefreshing}
+            >
+              <RotateCcw
+                className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+              {isRefreshing ? 'Updating...' : 'Update'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
