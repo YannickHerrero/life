@@ -23,14 +23,24 @@ export function Settings() {
   const { navigate } = useNavigation();
   const settings = useAppStore((s) => s.settings);
   const setJapaneseDailyGoal = useAppStore((s) => s.setJapaneseDailyGoal);
+  const setWeightGoal = useAppStore((s) => s.setWeightGoal);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dailyGoalInput, setDailyGoalInput] = useState(String(settings.japaneseDailyGoalMinutes));
+  const [weightGoalInput, setWeightGoalInput] = useState(String(settings.weightGoalKg));
 
   const handleDailyGoalChange = (value: string) => {
     setDailyGoalInput(value);
     const minutes = parseInt(value, 10);
     if (!isNaN(minutes) && minutes > 0) {
       setJapaneseDailyGoal(minutes);
+    }
+  };
+
+  const handleWeightGoalChange = (value: string) => {
+    setWeightGoalInput(value);
+    const kg = parseFloat(value);
+    if (!isNaN(kg) && kg > 0) {
+      setWeightGoal(kg);
     }
   };
 
@@ -105,6 +115,33 @@ export function Settings() {
                 className="w-20"
               />
               <span className="text-sm text-muted-foreground">minutes</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Weight Goal */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Weight Goal</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <Label htmlFor="weightGoal" className="text-sm text-muted-foreground whitespace-nowrap">
+              Target weight:
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="weightGoal"
+                type="number"
+                min="30"
+                max="200"
+                step="0.1"
+                value={weightGoalInput}
+                onChange={(e) => handleWeightGoalChange(e.target.value)}
+                className="w-20"
+              />
+              <span className="text-sm text-muted-foreground">kg</span>
             </div>
           </div>
         </CardContent>

@@ -499,6 +499,7 @@ interface SportStats {
 
 interface AppSettings {
   japaneseDailyGoalMinutes: number;
+  weightGoalKg: number;
 }
 
 interface AppStore {
@@ -513,6 +514,7 @@ interface AppStore {
   // Settings
   settings: AppSettings;
   setJapaneseDailyGoal: (minutes: number) => Promise<void>;
+  setWeightGoal: (kg: number) => Promise<void>;
 
   // Raw data
   japaneseActivities: JapaneseActivity[];
@@ -589,6 +591,7 @@ const defaultWeeklyAverages: MacroTotals = { calories: 0, protein: 0, carbs: 0, 
 
 const defaultSettings: AppSettings = {
   japaneseDailyGoalMinutes: 60,
+  weightGoalKg: 65,
 };
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -605,6 +608,10 @@ export const useAppStore = create<AppStore>((set, get) => ({
   setJapaneseDailyGoal: async (minutes: number) => {
     set({ settings: { ...get().settings, japaneseDailyGoalMinutes: minutes } });
     await db.syncMeta.put({ key: 'japaneseDailyGoalMinutes', value: minutes });
+  },
+  setWeightGoal: async (kg: number) => {
+    set({ settings: { ...get().settings, weightGoalKg: kg } });
+    await db.syncMeta.put({ key: 'weightGoalKg', value: kg });
   },
 
   japaneseActivities: [],
@@ -633,6 +640,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         weightEntries,
         books,
         japaneseDailyGoalMeta,
+        weightGoalMeta,
       ] = await Promise.all([
         db.japaneseActivities.filter((a) => !a.deletedAt).toArray(),
         db.sportActivities.filter((a) => !a.deletedAt).toArray(),
@@ -641,6 +649,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         db.weightEntries.filter((e) => !e.deletedAt).toArray(),
         db.books.filter((b) => !b.deletedAt).toArray(),
         db.syncMeta.get('japaneseDailyGoalMinutes'),
+        db.syncMeta.get('weightGoalKg'),
       ]);
 
       // Load settings
@@ -648,6 +657,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
         japaneseDailyGoalMinutes: typeof japaneseDailyGoalMeta?.value === 'number' 
           ? japaneseDailyGoalMeta.value 
           : 60,
+        weightGoalKg: typeof weightGoalMeta?.value === 'number'
+          ? weightGoalMeta.value
+          : 65,
       };
 
       // Compute stats

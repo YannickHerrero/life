@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  ReferenceLine,
 } from 'recharts';
 
 interface DataPoint {
@@ -22,11 +23,19 @@ interface LineConfig {
   color: string;
 }
 
+interface ReferenceLineConfig {
+  y: number;
+  label?: string;
+  color?: string;
+}
+
 interface LineChartProps {
   data: DataPoint[];
   lines: LineConfig[];
   height?: number;
   yAxisLabel?: string;
+  yDomain?: [number | 'auto', number | 'auto'];
+  referenceLines?: ReferenceLineConfig[];
   formatYAxis?: (value: number) => string;
   formatTooltip?: (value: number) => string;
 }
@@ -36,6 +45,8 @@ export function LineChart({
   lines,
   height = 200,
   yAxisLabel,
+  yDomain,
+  referenceLines,
   formatYAxis,
   formatTooltip,
 }: LineChartProps) {
@@ -76,6 +87,7 @@ export function LineChart({
           tickLine={false}
           axisLine={false}
           tickFormatter={formatYAxis}
+          domain={yDomain}
           label={
             yAxisLabel
               ? {
@@ -106,6 +118,20 @@ export function LineChart({
             iconType="line"
           />
         )}
+        {referenceLines?.map((refLine, index) => (
+          <ReferenceLine
+            key={index}
+            y={refLine.y}
+            stroke={refLine.color ?? 'hsl(var(--muted-foreground))'}
+            strokeDasharray="5 5"
+            label={refLine.label ? {
+              value: refLine.label,
+              position: 'right',
+              fill: refLine.color ?? 'hsl(var(--muted-foreground))',
+              fontSize: 11,
+            } : undefined}
+          />
+        ))}
         {lines.map((line) => (
           <Line
             key={line.dataKey}

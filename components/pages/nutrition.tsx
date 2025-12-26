@@ -22,6 +22,7 @@ export function Nutrition() {
   const foods = useAppStore((s) => s.foods);
   const weightEntries = useAppStore((s) => s.weightEntries);
   const weeklyAverages = useAppStore((s) => s.weeklyAverages);
+  const weightGoalKg = useAppStore((s) => s.settings.weightGoalKg);
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [period, setPeriod] = useState<Period>('3m');
@@ -74,6 +75,12 @@ export function Nutrition() {
       .sort((a, b) => a.date.localeCompare(b.date))
       .map((e) => ({ date: e.date, weight: e.weightKg }));
   }, [weightEntries, period]);
+
+  // Calculate Y-axis domain for weight chart based on goal
+  // Range: goal - 3kg to goal + 15kg
+  const weightDomain = useMemo((): [number, number] => {
+    return [Math.floor(weightGoalKg - 3), Math.ceil(weightGoalKg + 15)];
+  }, [weightGoalKg]);
 
   const navigateDate = (direction: 'prev' | 'next') => {
     const newDate = new Date(selectedDate);
@@ -219,6 +226,8 @@ export function Nutrition() {
             data={weightData.map((d) => ({ date: d.date, weight: d.weight }))}
             lines={[{ dataKey: 'weight', name: 'Weight', color: 'hsl(var(--primary))' }]}
             height={180}
+            yDomain={weightDomain}
+            referenceLines={[{ y: weightGoalKg, label: 'Goal', color: 'hsl(var(--chart-2))' }]}
             formatYAxis={(v) => `${v}kg`}
             formatTooltip={(v) => `${v} kg`}
           />
