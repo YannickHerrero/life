@@ -285,14 +285,23 @@ function computeWeeklyComparison(activities: JapaneseActivity[]): {
   const startOfLastWeek = new Date(startOfThisWeek);
   startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
 
+  // Calculate how many days have passed this week (1 = Monday only, 7 = full week)
+  const dayOfWeek = now.getDay();
+  const daysIntoWeek = dayOfWeek === 0 ? 7 : dayOfWeek; // Sunday = 7, Mon = 1, etc.
+
+  // End of comparison period for last week (same day of week as today)
+  const endOfLastWeekComparison = new Date(startOfLastWeek);
+  endOfLastWeekComparison.setDate(startOfLastWeek.getDate() + daysIntoWeek);
+  endOfLastWeekComparison.setHours(0, 0, 0, 0);
+
   let thisWeek = 0;
   let lastWeek = 0;
 
   for (const activity of activities) {
     const activityDate = new Date(activity.date);
-    if (activityDate >= startOfThisWeek) {
+    if (activityDate >= startOfThisWeek && activityDate <= now) {
       thisWeek += activity.durationMinutes;
-    } else if (activityDate >= startOfLastWeek && activityDate < startOfThisWeek) {
+    } else if (activityDate >= startOfLastWeek && activityDate < endOfLastWeekComparison) {
       lastWeek += activity.durationMinutes;
     }
   }
