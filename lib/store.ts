@@ -142,6 +142,194 @@ function computeDailyTimeMap(activities: JapaneseActivity[]): Map<string, number
   return map;
 }
 
+function computeTodayMinutes(activities: JapaneseActivity[]): number {
+  const todayStr = today();
+  return activities
+    .filter((a) => a.date === todayStr)
+    .reduce((sum, a) => sum + a.durationMinutes, 0);
+}
+
+function computeWeeklyAverageStudy(activities: JapaneseActivity[]): number {
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(now.getDate() - 6);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  // Get daily totals for last 7 days
+  const dailyTotals = new Map<string, number>();
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(sevenDaysAgo);
+    date.setDate(sevenDaysAgo.getDate() + i);
+    dailyTotals.set(toDateString(date), 0);
+  }
+
+  for (const activity of activities) {
+    const activityDate = new Date(activity.date);
+    if (activityDate >= sevenDaysAgo && activityDate <= now) {
+      const current = dailyTotals.get(activity.date) ?? 0;
+      dailyTotals.set(activity.date, current + activity.durationMinutes);
+    }
+  }
+
+  const total = Array.from(dailyTotals.values()).reduce((sum, v) => sum + v, 0);
+  return Math.round(total / 7);
+}
+
+function computeTimeByType(activities: JapaneseActivity[]): {
+  flashcards: PeriodStats;
+  reading: PeriodStats;
+  watching: PeriodStats;
+  listening: PeriodStats;
+} {
+  const types = ['flashcards', 'reading', 'watching', 'listening'] as const;
+  const result: Record<string, PeriodStats> = {};
+
+  for (const type of types) {
+    const filtered = activities.filter((a) => a.type === type);
+    result[type] = computePeriodStats(filtered);
+  }
+
+  return result as {
+    flashcards: PeriodStats;
+    reading: PeriodStats;
+    watching: PeriodStats;
+    listening: PeriodStats;
+  };
+}
+
+function computeTimeByDayOfWeek(activities: JapaneseActivity[]): number[] {
+  // [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+  const dayTotals = [0, 0, 0, 0, 0, 0, 0];
+  const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+
+  // Get unique dates with activities
+  const dateMinutes = new Map<string, number>();
+  for (const activity of activities) {
+    const current = dateMinutes.get(activity.date) ?? 0;
+    dateMinutes.set(activity.date, current + activity.durationMinutes);
+  }
+
+  for (const [dateStr, minutes] of dateMinutes) {
+    const date = new Date(dateStr);
+    // getDay() returns 0 for Sunday, we want Monday = 0
+    const dayIndex = (date.getDay() + 6) % 7;
+    dayTotals[dayIndex] += minutes;
+    dayCounts[dayIndex]++;
+  }
+
+  // Calculate averages
+  return dayTotals.map((total, i) => 
+    dayCounts[i] > 0 ? Math.round(total / dayCounts[i]) : 0
+  );
+}
+
+function computeCardsPerSession(activities: JapaneseActivity[]): number {
+  const flashcardActivities = activities.filter(
+    (a) => a.type === 'flashcards' && a.newCards !== null && a.newCards > 0
+  );
+  if (flashcardActivities.length === 0) return 0;
+
+  const totalCards = flashcardActivities.reduce((sum, a) => sum + (a.newCards ?? 0), 0);
+  return Math.round(totalCards / flashcardActivities.length);
+}
+
+function computeBestDay(activities: JapaneseActivity[]): { date: string; minutes: number } {
+  const dailyTotals = new Map<string, number>();
+  for (const activity of activities) {
+    const current = dailyTotals.get(activity.date) ?? 0;
+    dailyTotals.set(activity.date, current + activity.durationMinutes);
+  }
+
+  let bestDate = '';
+  let bestMinutes = 0;
+  for (const [date, minutes] of dailyTotals) {
+    if (minutes > bestMinutes) {
+      bestMinutes = minutes;
+      bestDate = date;
+    }
+  }
+
+  return { date: bestDate, minutes: bestMinutes };
+}
+
+function computeBestMonth(activities: JapaneseActivity[]): { date: string; minutes: number } {
+  const monthlyTotals = new Map<string, number>();
+  for (const activity of activities) {
+    const month = activity.date.substring(0, 7); // "2025-01"
+    const current = monthlyTotals.get(month) ?? 0;
+    monthlyTotals.set(month, current + activity.durationMinutes);
+  }
+
+  let bestMonth = '';
+  let bestMinutes = 0;
+  for (const [month, minutes] of monthlyTotals) {
+    if (minutes > bestMinutes) {
+      bestMinutes = minutes;
+      bestMonth = month;
+    }
+  }
+
+  return { date: bestMonth, minutes: bestMinutes };
+}
+
+function computeWeeklyComparison(activities: JapaneseActivity[]): {
+  thisWeek: number;
+  lastWeek: number;
+  change: number;
+} {
+  const now = new Date();
+  const startOfThisWeek = new Date(now);
+  startOfThisWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+  startOfThisWeek.setHours(0, 0, 0, 0);
+
+  const startOfLastWeek = new Date(startOfThisWeek);
+  startOfLastWeek.setDate(startOfThisWeek.getDate() - 7);
+
+  let thisWeek = 0;
+  let lastWeek = 0;
+
+  for (const activity of activities) {
+    const activityDate = new Date(activity.date);
+    if (activityDate >= startOfThisWeek) {
+      thisWeek += activity.durationMinutes;
+    } else if (activityDate >= startOfLastWeek && activityDate < startOfThisWeek) {
+      lastWeek += activity.durationMinutes;
+    }
+  }
+
+  const change = lastWeek > 0 ? Math.round(((thisWeek - lastWeek) / lastWeek) * 100) : 0;
+
+  return { thisWeek, lastWeek, change };
+}
+
+function computeMonthlyTrend(activities: JapaneseActivity[]): Array<{
+  month: string;
+  label: string;
+  minutes: number;
+}> {
+  const now = new Date();
+  const result: Array<{ month: string; label: string; minutes: number }> = [];
+
+  // Last 12 months
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+    result.push({ month: monthKey, label, minutes: 0 });
+  }
+
+  // Aggregate activities
+  for (const activity of activities) {
+    const monthKey = activity.date.substring(0, 7);
+    const entry = result.find((r) => r.month === monthKey);
+    if (entry) {
+      entry.minutes += activity.durationMinutes;
+    }
+  }
+
+  return result;
+}
+
 function computeSportTimeStats(activities: SportActivity[], sportType: SportType): PeriodStats {
   const filtered = activities.filter((a) => a.sportType === sportType);
   return computePeriodStats(filtered);
@@ -250,12 +438,47 @@ function computeWeeklyAverages(mealEntries: MealEntry[], foods: Food[]): MacroTo
   };
 }
 
+// Extended stats types
+interface TimeByType {
+  flashcards: PeriodStats;
+  reading: PeriodStats;
+  watching: PeriodStats;
+  listening: PeriodStats;
+}
+
+interface BestRecord {
+  date: string;
+  minutes: number;
+}
+
+interface WeeklyComparison {
+  thisWeek: number;
+  lastWeek: number;
+  change: number; // percentage change
+}
+
+interface MonthlyDataPoint {
+  month: string; // "2025-01"
+  label: string; // "Jan 2025"
+  minutes: number;
+}
+
 // Store types
 interface JapaneseStats {
   streaks: StreakInfo;
   flashcardStats: PeriodStats;
   timeStats: PeriodStats;
   dailyTimeMap: Map<string, number>;
+  // New stats
+  todayMinutes: number;
+  weeklyAverage: number; // average daily minutes over last 7 days
+  timeByType: TimeByType;
+  timeByDayOfWeek: number[]; // [Mon, Tue, Wed, Thu, Fri, Sat, Sun] averages
+  cardsPerSession: number;
+  bestDay: BestRecord;
+  bestMonth: BestRecord;
+  weeklyComparison: WeeklyComparison;
+  monthlyTrend: MonthlyDataPoint[]; // last 12 months
 }
 
 interface SportStats {
@@ -263,6 +486,10 @@ interface SportStats {
   workoutStats: PeriodStats;
   bikeStats: PeriodStats;
   dailyActivityMap: Map<string, { running: boolean; workout: boolean }>;
+}
+
+interface AppSettings {
+  japaneseDailyGoalMinutes: number;
 }
 
 interface AppStore {
@@ -273,6 +500,10 @@ interface AppStore {
   // App update state
   updateAvailable: boolean;
   setUpdateAvailable: (available: boolean) => void;
+
+  // Settings
+  settings: AppSettings;
+  setJapaneseDailyGoal: (minutes: number) => Promise<void>;
 
   // Raw data
   japaneseActivities: JapaneseActivity[];
@@ -315,11 +546,27 @@ interface AppStore {
   deleteBook: (id: string) => void;
 }
 
+const defaultPeriodStats: PeriodStats = { total: 0, thisWeek: 0, thisMonth: 0, thisYear: 0 };
+
 const defaultJapaneseStats: JapaneseStats = {
   streaks: { current: 0, longest: 0 },
   flashcardStats: { total: 0, thisWeek: 0, thisMonth: 0, thisYear: 0 },
   timeStats: { total: 0, thisWeek: 0, thisMonth: 0, thisYear: 0 },
   dailyTimeMap: new Map(),
+  todayMinutes: 0,
+  weeklyAverage: 0,
+  timeByType: {
+    flashcards: defaultPeriodStats,
+    reading: defaultPeriodStats,
+    watching: defaultPeriodStats,
+    listening: defaultPeriodStats,
+  },
+  timeByDayOfWeek: [0, 0, 0, 0, 0, 0, 0],
+  cardsPerSession: 0,
+  bestDay: { date: '', minutes: 0 },
+  bestMonth: { date: '', minutes: 0 },
+  weeklyComparison: { thisWeek: 0, lastWeek: 0, change: 0 },
+  monthlyTrend: [],
 };
 
 const defaultSportStats: SportStats = {
@@ -331,6 +578,10 @@ const defaultSportStats: SportStats = {
 
 const defaultWeeklyAverages: MacroTotals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
 
+const defaultSettings: AppSettings = {
+  japaneseDailyGoalMinutes: 60,
+};
+
 export const useAppStore = create<AppStore>((set, get) => ({
   // Initial state
   isLoading: false,
@@ -339,6 +590,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
   // App update state
   updateAvailable: false,
   setUpdateAvailable: (available) => set({ updateAvailable: available }),
+
+  // Settings
+  settings: defaultSettings,
+  setJapaneseDailyGoal: async (minutes: number) => {
+    set({ settings: { ...get().settings, japaneseDailyGoalMinutes: minutes } });
+    await db.syncMeta.put({ key: 'japaneseDailyGoalMinutes', value: minutes });
+  },
 
   japaneseActivities: [],
   sportActivities: [],
@@ -365,6 +623,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         foods,
         weightEntries,
         books,
+        japaneseDailyGoalMeta,
       ] = await Promise.all([
         db.japaneseActivities.filter((a) => !a.deletedAt).toArray(),
         db.sportActivities.filter((a) => !a.deletedAt).toArray(),
@@ -372,7 +631,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
         db.foods.filter((f) => !f.deletedAt).toArray(),
         db.weightEntries.filter((e) => !e.deletedAt).toArray(),
         db.books.filter((b) => !b.deletedAt).toArray(),
+        db.syncMeta.get('japaneseDailyGoalMinutes'),
       ]);
+
+      // Load settings
+      const settings: AppSettings = {
+        japaneseDailyGoalMinutes: typeof japaneseDailyGoalMeta?.value === 'number' 
+          ? japaneseDailyGoalMeta.value 
+          : 60,
+      };
 
       // Compute stats
       const japaneseStats: JapaneseStats = {
@@ -380,6 +647,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
         flashcardStats: computeFlashcardStats(japaneseActivities),
         timeStats: computePeriodStats(japaneseActivities),
         dailyTimeMap: computeDailyTimeMap(japaneseActivities),
+        todayMinutes: computeTodayMinutes(japaneseActivities),
+        weeklyAverage: computeWeeklyAverageStudy(japaneseActivities),
+        timeByType: computeTimeByType(japaneseActivities),
+        timeByDayOfWeek: computeTimeByDayOfWeek(japaneseActivities),
+        cardsPerSession: computeCardsPerSession(japaneseActivities),
+        bestDay: computeBestDay(japaneseActivities),
+        bestMonth: computeBestMonth(japaneseActivities),
+        weeklyComparison: computeWeeklyComparison(japaneseActivities),
+        monthlyTrend: computeMonthlyTrend(japaneseActivities),
       };
 
       const sportStats: SportStats = {
@@ -395,6 +671,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
       set({
         isLoading: false,
         isReady: true,
+        settings,
         japaneseActivities,
         sportActivities,
         mealEntries,
@@ -421,6 +698,15 @@ export const useAppStore = create<AppStore>((set, get) => ({
         flashcardStats: computeFlashcardStats(japaneseActivities),
         timeStats: computePeriodStats(japaneseActivities),
         dailyTimeMap: computeDailyTimeMap(japaneseActivities),
+        todayMinutes: computeTodayMinutes(japaneseActivities),
+        weeklyAverage: computeWeeklyAverageStudy(japaneseActivities),
+        timeByType: computeTimeByType(japaneseActivities),
+        timeByDayOfWeek: computeTimeByDayOfWeek(japaneseActivities),
+        cardsPerSession: computeCardsPerSession(japaneseActivities),
+        bestDay: computeBestDay(japaneseActivities),
+        bestMonth: computeBestMonth(japaneseActivities),
+        weeklyComparison: computeWeeklyComparison(japaneseActivities),
+        monthlyTrend: computeMonthlyTrend(japaneseActivities),
       },
     });
   },
