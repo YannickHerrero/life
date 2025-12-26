@@ -5,6 +5,7 @@ import { useNavigation } from '@/lib/navigation-context';
 import { useAppStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ActivityHeatmap } from '@/components/charts/activity-heatmap';
+import { AreaChart } from '@/components/charts/area-chart';
 import { Flame, BookOpen, ChevronRight } from 'lucide-react';
 
 function formatMinutes(minutes: number): string {
@@ -15,14 +16,80 @@ function formatMinutes(minutes: number): string {
   return `${hours}h ${mins}m`;
 }
 
+// Activity type colors (shades of white)
+const ACTIVITY_COLORS = {
+  flashcards: '#ffffff', // white
+  reading: '#e5e5e5',    // neutral-200
+  watching: '#a3a3a3',   // neutral-400
+  listening: '#737373',  // neutral-500
+} as const;
+
+const ACTIVITY_LABELS = {
+  flashcards: 'Flashcards',
+  reading: 'Reading',
+  watching: 'Watching',
+  listening: 'Listening',
+} as const;
+
 export function Japanese() {
   const { navigate } = useNavigation();
   const japaneseStats = useAppStore((s) => s.japaneseStats);
+  const japaneseActivities = useAppStore((s) => s.japaneseActivities);
 
   // Convert Map to the format expected by heatmap
   const heatmapData = useMemo(() => {
     return japaneseStats.dailyTimeMap;
   }, [japaneseStats.dailyTimeMap]);
+
+  // Compute area chart data for last 30 days
+  const areaChartData = useMemo(() => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(now.getDate() - 29);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    // Create a map of date -> activity type -> minutes
+    const dailyByType = new Map<string, Record<string, number>>();
+
+    // Initialize all 30 days with zero values
+    for (let i = 0; i < 30; i++) {
+      const date = new Date(thirtyDaysAgo);
+      date.setDate(thirtyDaysAgo.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+      dailyByType.set(dateStr, {
+        flashcards: 0,
+        reading: 0,
+        watching: 0,
+        listening: 0,
+      });
+    }
+
+    // Aggregate activities by date and type
+    for (const activity of japaneseActivities) {
+      const activityDate = new Date(activity.date);
+      if (activityDate >= thirtyDaysAgo && activityDate <= now) {
+        const existing = dailyByType.get(activity.date);
+        if (existing) {
+          existing[activity.type] = (existing[activity.type] || 0) + activity.durationMinutes;
+        }
+      }
+    }
+
+    // Convert to array format for Recharts
+    return Array.from(dailyByType.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, values]) => ({
+        date,
+        ...values,
+      }));
+  }, [japaneseActivities]);
+
+  const areaConfig = [
+    { dataKey: 'flashcards', name: ACTIVITY_LABELS.flashcards, color: ACTIVITY_COLORS.flashcards },
+    { dataKey: 'reading', name: ACTIVITY_LABELS.reading, color: ACTIVITY_COLORS.reading },
+    { dataKey: 'watching', name: ACTIVITY_LABELS.watching, color: ACTIVITY_COLORS.watching },
+    { dataKey: 'listening', name: ACTIVITY_LABELS.listening, color: ACTIVITY_COLORS.listening },
+  ];
 
   return (
     <div className="p-4 space-y-6">
@@ -111,6 +178,22 @@ export function Japanese() {
               <p className="text-sm text-muted-foreground">This Week</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Daily Activity Chart */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Daily Activity (Last 30 Days)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AreaChart
+            data={areaChartData}
+            areas={areaConfig}
+            height={200}
+            formatYAxis={(value) => `${value}m`}
+            formatTooltip={(value) => `${value} min`}
+          />
         </CardContent>
       </Card>
 
