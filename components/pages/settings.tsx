@@ -145,7 +145,7 @@ export function Settings() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-sm font-medium">
                 {updateAvailable ? 'Update App' : 'Refresh App'}
