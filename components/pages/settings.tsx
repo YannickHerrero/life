@@ -6,9 +6,12 @@ import { useAuth } from '@/lib/auth-context';
 import { useSync } from '@/hooks/useSync';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
 import { useNavigation } from '@/lib/navigation-context';
+import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { LogOut, RefreshCw, History, Sun, Moon, Monitor, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +21,18 @@ export function Settings() {
   const { updateAvailable, refreshApp } = useServiceWorker();
   const { theme, setTheme } = useTheme();
   const { navigate } = useNavigation();
+  const settings = useAppStore((s) => s.settings);
+  const setJapaneseDailyGoal = useAppStore((s) => s.setJapaneseDailyGoal);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dailyGoalInput, setDailyGoalInput] = useState(String(settings.japaneseDailyGoalMinutes));
+
+  const handleDailyGoalChange = (value: string) => {
+    setDailyGoalInput(value);
+    const minutes = parseInt(value, 10);
+    if (!isNaN(minutes) && minutes > 0) {
+      setJapaneseDailyGoal(minutes);
+    }
+  };
 
   const handleRefreshApp = async () => {
     setIsRefreshing(true);
@@ -67,6 +81,32 @@ export function Settings() {
           {status === 'success' && (
             <p className="text-sm text-green-600">Synced successfully!</p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Japanese Daily Goal */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Japanese Study Goal</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-3">
+            <Label htmlFor="dailyGoal" className="text-sm text-muted-foreground whitespace-nowrap">
+              Daily goal:
+            </Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="dailyGoal"
+                type="number"
+                min="1"
+                max="480"
+                value={dailyGoalInput}
+                onChange={(e) => handleDailyGoalChange(e.target.value)}
+                className="w-20"
+              />
+              <span className="text-sm text-muted-foreground">minutes</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
