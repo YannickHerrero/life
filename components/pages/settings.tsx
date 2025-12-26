@@ -126,7 +126,6 @@ export function Settings() {
           <Button
             variant="outline"
             className="w-full justify-start"
-            pressMode="press"
             onClick={() => navigate('history')}
           >
             <History className="h-4 w-4 mr-2" />
