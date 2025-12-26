@@ -174,7 +174,7 @@ export function JapaneseInput({ onSuccess }: JapaneseInputProps) {
         durationMinutes: duration,
         newCards:
           selectedType === JapaneseActivityType.FLASHCARDS
-            ? parseInt(newCards, 10) || (hasFlashcardToday ? 0 : 20)
+            ? parseInt(newCards, 10) || 0
             : null,
         bookId: selectedBook?.id ?? null,
         date: today(),
