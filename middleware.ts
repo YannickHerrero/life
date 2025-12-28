@@ -2,12 +2,18 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 // Routes that require authentication (root path is the main app)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const protectedRoutes = ['/'];
 
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ['/login', '/signup'];
 
 export async function middleware(request: NextRequest) {
+  // Skip auth checks for public API routes (they use API key auth)
+  if (request.nextUrl.pathname.startsWith('/api/v1/')) {
+    return NextResponse.next({ request });
+  }
+
   // Skip auth checks if Supabase is not configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
