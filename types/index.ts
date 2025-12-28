@@ -89,6 +89,15 @@ export interface SyncMeta {
   value: string | number | Date;
 }
 
+// API Keys
+export interface ApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  lastUsedAt: Date | null;
+  createdAt: Date;
+}
+
 // Form input types (without sync fields)
 export type BookInput = Omit<Book, keyof SyncableEntity>;
 export type JapaneseActivityInput = Omit<JapaneseActivity, keyof SyncableEntity>;

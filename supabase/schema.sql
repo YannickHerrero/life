@@ -258,3 +258,36 @@ create trigger update_sport_activities_updated_at
 create trigger update_weight_entries_updated_at
   before update on weight_entries
   for each row execute function update_updated_at_column();
+
+-- ============================================
+-- API KEYS (for external API access)
+-- ============================================
+
+-- API Keys table
+create table if not exists api_keys (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users(id) on delete cascade not null,
+  name text not null,
+  key_hash text not null,
+  key_prefix text not null,
+  last_used_at timestamptz,
+  created_at timestamptz default now() not null
+);
+
+create index if not exists idx_api_keys_user on api_keys(user_id);
+create index if not exists idx_api_keys_key_hash on api_keys(key_hash);
+
+-- API Keys RLS
+alter table api_keys enable row level security;
+
+create policy "Users can view own api_keys"
+  on api_keys for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own api_keys"
+  on api_keys for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete own api_keys"
+  on api_keys for delete
+  using (auth.uid() = user_id);
