@@ -53,9 +53,14 @@ export function NutritionHistory() {
   // Create food map and entries with food info
   const foodMap = useMemo(() => new Map(foods.map((f) => [f.id, f])), [foods]);
 
+  // Sort by date descending, then by createdAt descending (newest first)
   const entriesWithFood = useMemo(
     () => [...mealEntries]
-      .sort((a, b) => b.date.localeCompare(a.date))
+      .sort((a, b) => {
+        const dateCompare = b.date.localeCompare(a.date);
+        if (dateCompare !== 0) return dateCompare;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      })
       .map((entry) => ({
         entry,
         food: foodMap.get(entry.foodId),

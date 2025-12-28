@@ -54,9 +54,13 @@ export function SportHistory() {
   const [editDistance, setEditDistance] = useState('');
   const [editDate, setEditDate] = useState<Date>(new Date());
 
-  // Sort activities by date descending
+  // Sort activities by date descending, then by createdAt descending (newest first)
   const sortedActivities = useMemo(
-    () => [...sportActivities].sort((a, b) => b.date.localeCompare(a.date)),
+    () => [...sportActivities].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }),
     [sportActivities]
   );
 

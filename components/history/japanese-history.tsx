@@ -49,9 +49,13 @@ export function JapaneseHistory() {
   const [editNewCards, setEditNewCards] = useState('');
   const [editDate, setEditDate] = useState<Date>(new Date());
 
-  // Sort activities by date descending
+  // Sort activities by date descending, then by createdAt descending (newest first)
   const sortedActivities = useMemo(
-    () => [...japaneseActivities].sort((a, b) => b.date.localeCompare(a.date)),
+    () => [...japaneseActivities].sort((a, b) => {
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }),
     [japaneseActivities]
   );
 
