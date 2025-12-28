@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogOut, RefreshCw, History, Sun, Moon, Monitor, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ApiKeys } from '@/components/settings/api-keys';
 
 export function Settings() {
   const { user, signOut } = useAuth();
@@ -196,6 +197,9 @@ export function Settings() {
           </div>
         </CardContent>
       </Card>
+
+      {/* API Keys */}
+      <ApiKeys />
 
       {/* History Link */}
       <Card>
