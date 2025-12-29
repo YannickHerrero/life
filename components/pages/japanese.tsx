@@ -147,6 +147,14 @@ export function Japanese() {
     }));
   }, [japaneseStats.timeByDayOfWeek]);
 
+  // Hour of day data
+  const hourOfDayData = useMemo(() => {
+    return japaneseStats.timeByHourOfDay.map((minutes, hour) => ({
+      label: hour === 0 ? '12AM' : hour < 12 ? `${hour}AM` : hour === 12 ? '12PM' : `${hour - 12}PM`,
+      value: minutes,
+    }));
+  }, [japaneseStats.timeByHourOfDay]);
+
   // Weekly comparison bar data
   const weeklyComparisonData = useMemo(() => {
     return [
@@ -404,6 +412,23 @@ export function Japanese() {
             color="#a3a3a3"
             formatYAxis={(value) => `${value}m`}
             formatTooltip={(value) => formatMinutes(value)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Activity by Hour of Day */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Activity by Hour of Day</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BarChart
+            data={hourOfDayData}
+            height={150}
+            color="#737373"
+            formatYAxis={(value) => `${Math.round(value / 60)}h`}
+            formatTooltip={(value) => formatMinutes(value)}
+            xAxisInterval={5}
           />
         </CardContent>
       </Card>

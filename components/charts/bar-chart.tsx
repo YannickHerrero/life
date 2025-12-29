@@ -22,6 +22,7 @@ interface BarChartProps {
   yAxisLabel?: string;
   formatYAxis?: (value: number) => string;
   formatTooltip?: (value: number) => string;
+  xAxisInterval?: number | 'preserveStart' | 'preserveEnd' | 'preserveStartEnd';
 }
 
 export function BarChart({
@@ -31,6 +32,7 @@ export function BarChart({
   yAxisLabel,
   formatYAxis,
   formatTooltip,
+  xAxisInterval = 0,
 }: BarChartProps) {
   if (data.length === 0) {
     return (
@@ -56,7 +58,7 @@ export function BarChart({
           className="text-muted-foreground"
           tickLine={false}
           axisLine={false}
-          interval={0}
+          interval={xAxisInterval}
           angle={-45}
           textAnchor="end"
           height={50}

@@ -339,6 +339,19 @@ function computeMonthlyTrend(activities: JapaneseActivity[]): Array<{
   return result;
 }
 
+function computeTimeByHourOfDay(activities: JapaneseActivity[]): number[] {
+  // Array of 24 hours (0-23), each containing total minutes
+  const hourTotals = new Array(24).fill(0);
+
+  for (const activity of activities) {
+    const createdAt = new Date(activity.createdAt);
+    const hour = createdAt.getHours();
+    hourTotals[hour] += activity.durationMinutes;
+  }
+
+  return hourTotals;
+}
+
 function computeSportTimeStats(activities: SportActivity[], sportType: SportType): PeriodStats {
   const filtered = activities.filter((a) => a.sportType === sportType);
   return computePeriodStats(filtered);
@@ -483,6 +496,7 @@ interface JapaneseStats {
   weeklyAverage: number; // average daily minutes over last 7 days
   timeByType: TimeByType;
   timeByDayOfWeek: number[]; // [Mon, Tue, Wed, Thu, Fri, Sat, Sun] averages
+  timeByHourOfDay: number[]; // [0-23] total minutes per hour
   cardsPerSession: number;
   bestDay: BestRecord;
   bestMonth: BestRecord;
@@ -573,6 +587,7 @@ const defaultJapaneseStats: JapaneseStats = {
     listening: defaultPeriodStats,
   },
   timeByDayOfWeek: [0, 0, 0, 0, 0, 0, 0],
+  timeByHourOfDay: new Array(24).fill(0),
   cardsPerSession: 0,
   bestDay: { date: '', minutes: 0 },
   bestMonth: { date: '', minutes: 0 },
@@ -672,6 +687,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         weeklyAverage: computeWeeklyAverageStudy(japaneseActivities),
         timeByType: computeTimeByType(japaneseActivities),
         timeByDayOfWeek: computeTimeByDayOfWeek(japaneseActivities),
+        timeByHourOfDay: computeTimeByHourOfDay(japaneseActivities),
         cardsPerSession: computeCardsPerSession(japaneseActivities),
         bestDay: computeBestDay(japaneseActivities),
         bestMonth: computeBestMonth(japaneseActivities),
@@ -723,6 +739,7 @@ export const useAppStore = create<AppStore>((set, get) => ({
         weeklyAverage: computeWeeklyAverageStudy(japaneseActivities),
         timeByType: computeTimeByType(japaneseActivities),
         timeByDayOfWeek: computeTimeByDayOfWeek(japaneseActivities),
+        timeByHourOfDay: computeTimeByHourOfDay(japaneseActivities),
         cardsPerSession: computeCardsPerSession(japaneseActivities),
         bestDay: computeBestDay(japaneseActivities),
         bestMonth: computeBestMonth(japaneseActivities),
