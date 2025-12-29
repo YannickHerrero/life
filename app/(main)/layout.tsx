@@ -47,20 +47,23 @@ function MainContent() {
 }
 
 function Header() {
-  const { navigate } = useNavigation();
+  const { state, navigate } = useNavigation();
   const { updateAvailable } = useServiceWorker();
+  const isSettingsPage = state.route === 'settings' || state.route === 'history';
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between px-4">
         <h1 className="text-lg font-semibold">Life</h1>
-        <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('settings')}>
-          <SettingsIcon className="h-5 w-5" />
-          {updateAvailable && (
-            <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-primary" />
-          )}
-          <span className="sr-only">Settings</span>
-        </Button>
+        {!isSettingsPage && (
+          <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('settings')}>
+            <SettingsIcon className="h-5 w-5" />
+            {updateAvailable && (
+              <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-primary" />
+            )}
+            <span className="sr-only">Settings</span>
+          </Button>
+        )}
       </div>
     </header>
   );
