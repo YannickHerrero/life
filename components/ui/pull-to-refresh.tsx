@@ -106,7 +106,7 @@ export function PullToRefresh({ onRefresh, children, className }: PullToRefreshP
 
       {/* Content container */}
       <div
-        className="transition-transform duration-200 ease-out"
+        className="h-full transition-transform duration-200 ease-out"
         style={{
           transform: `translateY(${pullDistance}px)`,
           transitionDuration: isPulling.current ? '0ms' : '200ms',
