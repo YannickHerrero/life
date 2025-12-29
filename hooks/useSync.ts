@@ -39,8 +39,8 @@ export function useSync() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const performSync = useCallback(async () => {
-    if (!user) return;
+  const performSync = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    if (!user) return { success: false, error: 'Not logged in' };
 
     setStatus('syncing');
     setError(null);
@@ -55,9 +55,11 @@ export function useSync() {
       setLastSynced(newLastSync);
       // Reset to idle after a short delay
       setTimeout(() => setStatus('idle'), 2000);
+      return { success: true };
     } else {
       setStatus('error');
       setError(result.error ?? 'Sync failed');
+      return { success: false, error: result.error };
     }
   }, [user, preloadAll]);
 
